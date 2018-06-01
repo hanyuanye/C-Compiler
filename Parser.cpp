@@ -1,0 +1,83 @@
+#include "Parser.h"
+#include <fstream>
+#include <string>
+#include <iostream>
+#include "InputStream.h"
+Parser::Parser() {
+	is = NULL;
+}
+
+Parser::Parser(InputStream _is) {
+	is = new InputStream(_is);
+}
+
+Parser::~Parser() {
+	delete is;	
+}
+
+void Parser::factor() {
+	is->emitln(std::string("MOVE #") + is->getNum() + ",D0");
+}
+
+
+void Parser::multiply() {
+	is->match('*');
+	factor();
+	is->emitln("MULS (SP)+,D0");
+}
+
+void Parser::divide() {
+	is->match('/');
+	factor();
+	is->emitln("MOVE (SP)+, D1");
+	is->emitln("DIVS D1, D0");
+}
+
+void Parser::term() {
+	factor();
+	while (is->isMulOp()) {
+		is->emitln("MOVE D0,-(SP)");
+		switch (is->look) {
+			case '*':
+				multiply();
+				break;
+			case '/':
+				divide();
+				break;
+			default:
+				is->expect("Mulop");
+				break;
+		};
+	}	
+}
+
+void Parser::add() {
+	is->match('+');
+	term();
+	is->emitln("ADD (SP)+,D0");
+}
+
+void Parser::subtract() {
+	is->match('-');
+	term();
+	is->emitln("SUB (SP)+, D0");
+	is->emitln("NEG D0");
+}
+
+void Parser::expression() {
+	term();
+	while (is->isAddOp()) {
+		is->emitln("MOVE D0,-(SP)");
+		switch(is->look) {
+			case '+':
+				add();
+				break;
+			case '-':
+				subtract();
+				break;
+			default:
+				is->expect("AddOp");
+				break;
+		};
+	}  
+}

@@ -6,6 +6,12 @@ InputStream::InputStream(std::string s) {
 	getChar();
 }
 
+InputStream::InputStream(const InputStream &is) {
+	code = is.code;
+	index = is.index;
+	look = is.look;
+}
+
 void InputStream::getChar() {
 	look = code[index];
 	index++;
@@ -45,6 +51,9 @@ bool InputStream::isAddOp() {
 	return (look == '+' || look == '-');
 }
 
+bool InputStream::isMulOp() {
+	return (look == '*' || look == '/');
+}
 char InputStream::getName() {
 	char c = look;
 	if (!isAlpha(c)) {
