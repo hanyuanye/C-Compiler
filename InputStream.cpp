@@ -41,12 +41,17 @@ bool InputStream::isDigit(char c) {
 	return (c >= '0' && c<= '9');
 }
 
+bool InputStream::isAddOp() {
+	return (look == '+' || look == '-');
+}
+
 char InputStream::getName() {
 	char c = look;
 	if (!isAlpha(c)) {
 		expect("Name");
 	}
 	getChar();
+	return c;
 }
 
 char InputStream::getNum() {
@@ -55,5 +60,14 @@ char InputStream::getNum() {
 		expect("Digit");
 	}
 	getChar();
+	return c;
 }
 
+void InputStream::emit(std::string s) {
+	std::cout << s;
+}
+
+void InputStream::emitln(std::string s) {
+	emit(s);
+	std::cout << std::endl;
+}

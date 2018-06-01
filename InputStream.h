@@ -10,10 +10,13 @@ public:
 	void match(char c);
 	bool isAlpha(char c);
 	bool isDigit(char c);
+	bool isAddOp();
 	char getName();
 	char getNum();
-private:
+	void emit(std::string s);
+	void emitln(std::string s);
 	char look;
+private:
 	std::string code;
 	int index;
 	
