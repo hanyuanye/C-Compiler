@@ -13,6 +13,9 @@ InputStream::InputStream(const InputStream &is) {
 }
 
 void InputStream::getChar() {
+	while (code[index] == ' ' || code[index] == '	') {
+		index++;
+	}
 	look = code[index];
 	index++;
 }

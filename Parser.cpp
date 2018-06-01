@@ -16,9 +16,18 @@ Parser::~Parser() {
 }
 
 void Parser::factor() {
-	is->emitln(std::string("MOVE #") + is->getNum() + ",D0");
+	if (is->look == '(') {
+		is->match('(');
+		expression();
+		is->match(')');
+	}
+	else if (is->isAlpha(is->look)) {
+		is->emitln(std::string("MOVE ") + is->getName() + "(PC),D0");
+	}
+	else {
+		is->emitln(std::string("MOVE #") + is->getNum() + ",D0");
+	}
 }
-
 
 void Parser::multiply() {
 	is->match('*');
@@ -65,7 +74,11 @@ void Parser::subtract() {
 }
 
 void Parser::expression() {
-	term();
+	if (is->isAddOp()) {
+		is->emitln("CLR D0");
+	} else {
+		term();
+	}
 	while (is->isAddOp()) {
 		is->emitln("MOVE D0,-(SP)");
 		switch(is->look) {

@@ -6,7 +6,7 @@
 
 int main(int argc, char** argv)
 {
-	std::string s = "1+2*3";
+	std::string s = "K + 4 * 3";
 	InputStream is(s);
 	Parser parser(is);
 	parser.expression();
