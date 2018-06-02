@@ -1,13 +1,14 @@
 #include <fstream>
 #include <string>
 #include <iostream>
-#include "InputStream.h"
-#include "Parser.h"
+#include "lexer.h"
 
 int main(int argc, char** argv)
 {
-	std::string s = "K + 4 * 3";
-	InputStream is(s);
-	Parser parser(is);
-	parser.expression();
+	std::string s = "int main() {int a; int aa; return 2; return 3;}";
+	Lexer lexer;
+	lexer.lex(s);
+	for (auto const& t: lexer.getTokens()) {
+		std::cout << t.first << " " << t.second.type << " " << t.second.value << std::endl;
+	}
 }
