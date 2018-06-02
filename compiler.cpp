@@ -2,6 +2,7 @@
 #include <string>
 #include <iostream>
 #include "lexer.h"
+#include "generateAST.h"
 
 int main(int argc, char** argv)
 {

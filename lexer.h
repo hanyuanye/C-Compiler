@@ -1,3 +1,6 @@
+#ifndef LEXER_H
+#define LEXER_H
+
 #include <string>
 #include <iostream>
 #include <map>
@@ -26,3 +29,5 @@ class Lexer {
 		void lex(std::string &file);
 		std::map<int, Token> getTokens();
 };
+
+#endif
