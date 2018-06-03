@@ -18,6 +18,8 @@ private:
 	void add();
 	void subtract();
 	void term();
+	void ident();
+	void assign();
 
 
 };

@@ -13,9 +13,6 @@ InputStream::InputStream(const InputStream &is) {
 }
 
 void InputStream::getChar() {
-	while (code[index] == ' ' || code[index] == '	') {
-		index++;
-	}
 	look = code[index];
 	index++;
 }
@@ -40,10 +37,11 @@ void InputStream::match(char c) {
 	} else {
 		error("" + c);
 	}
+	skipWhite();
 }
 
 bool InputStream::isAlpha(char c) {
-	return (c >= 'A' && c<= 'Z');
+	return ((c >= 'A' && c<= 'Z') || (c>= 'a' && c<= 'z'));
 }
 
 bool InputStream::isDigit(char c) {
@@ -57,22 +55,30 @@ bool InputStream::isAddOp() {
 bool InputStream::isMulOp() {
 	return (look == '*' || look == '/');
 }
-char InputStream::getName() {
-	char c = look;
-	if (!isAlpha(c)) {
+std::string InputStream::getName() {
+	std::string s;
+	if (!isAlpha(look)) {
 		expect("Name");
 	}
-	getChar();
-	return c;
+	while (isAlpha(look)) {
+		s += look;
+		getChar();
+	}
+	skipWhite();
+	return s;
 }
 
-char InputStream::getNum() {
-	char c = look;
+std::string InputStream::getNum() {
+	std::string num;
 	if (!isDigit(look)) {
 		expect("Digit");
 	}
-	getChar();
-	return c;
+	while (isDigit(look)) {
+		num += look;
+		getChar();
+	}
+	skipWhite();
+	return num;
 }
 
 void InputStream::emit(std::string s) {
@@ -82,4 +88,11 @@ void InputStream::emit(std::string s) {
 void InputStream::emitln(std::string s) {
 	emit(s);
 	std::cout << std::endl;
+}
+
+void InputStream::skipWhite() {
+	while (code[index] == ' ' || code[index] == '	') {
+		index++;
+	}
+	look = code[index];
 }

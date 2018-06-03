@@ -22,10 +22,22 @@ void Parser::factor() {
 		is->match(')');
 	}
 	else if (is->isAlpha(is->look)) {
-		is->emitln(std::string("MOVE ") + is->getName() + "(PC),D0");
+		ident();
 	}
 	else {
 		is->emitln(std::string("MOVE #") + is->getNum() + ",D0");
+	}
+}
+
+void Parser::ident() {
+	std::string name = is->getName();
+	if (is->look == '(') {
+		is->match('(');
+		is->match(')');
+		is->emitln(std::string("BSR ") + name);
+	} 
+	else {
+		is->emitln(std::string("MOVE ") + name + "(PC),D0");
 	}
 }
 
@@ -79,6 +91,7 @@ void Parser::expression() {
 	} else {
 		term();
 	}
+	if (!is->isAddOp()) is->expect("AddOps");
 	while (is->isAddOp()) {
 		is->emitln("MOVE D0,-(SP)");
 		switch(is->look) {
@@ -93,4 +106,12 @@ void Parser::expression() {
 				break;
 		};
 	}  
+}
+
+void Parser::assign() {
+	std::string name = is->getName();
+	is->match('=');
+	expression();
+	is->emitln(std::string("LEA") + name + "(PC),A0");
+	is->emitln("MOVE D0,(A0)");
 }

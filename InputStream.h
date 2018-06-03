@@ -16,14 +16,15 @@ public:
 	bool isDigit(char c);
 	bool isAddOp();
 	bool isMulOp();
-	char getName();
-	char getNum();
+	std::string getName();
+	std::string getNum();
 	void emit(std::string s);
 	void emitln(std::string s);
 	char look;
 private:
 	std::string code;
 	int index;
+	void skipWhite();
 	
 };
 #endif
