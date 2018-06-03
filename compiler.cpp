@@ -36,7 +36,7 @@ void generateAssembly(std::shared_ptr<AstNode> ast) {
 
 int main(int argc, char** argv)
 {
-	std::string s = "int main() {return 2;}";
+	std::string s = "int main() {return 42;}";
 	Lexer lexer;
 	lexer.lex(s);
 	Parser parser(lexer.getTokens());
