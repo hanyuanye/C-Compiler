@@ -1,16 +1,16 @@
 # C Compiler
 C Compiler compiles a subset of C into x86 assembly. It currently supports returning integers from a singular main function. 
 
-##Instructions
+## Instructions
 
 These instructions will get you a copy of the project up and running on your machine.
 
-###Prerequisites
+### Prerequisites
 
 1. g++ with version at least 5.2
 2. gcc with any recent version.
 
-###Run instructions
+### Run instructions
 
 1. Fork this repo into a directory.
 2. Open a terminal and navigate to the directory.
