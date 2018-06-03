@@ -1,5 +1,5 @@
 
-#include "generateAST.h"
+#include "Parser.h"
 
 const std::string statementArr[] = {"return"};
 const std::unordered_set<std::string> Parser::statementDict(statementArr, statementArr + sizeof(statementArr)/sizeof(statementArr[0]));

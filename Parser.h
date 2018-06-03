@@ -1,5 +1,5 @@
-#ifndef GENERATEAST_H
-#define GENERATEAST_H
+#ifndef PARSER_H
+#define PARSER_H
 
 #include <iostream>
 #include <unordered_set>
