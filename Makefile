@@ -7,4 +7,8 @@ compiler:	InputStream.h InputStream.cpp compiler.cpp Parser.h Parser.cpp
 lexer:		AstNode.cpp AstNode.h generateAST.cpp generateAST.h lexer.cpp lexer.h compiler.cpp
 		g++ -std=c++14 -g AstNode.cpp lexer.cpp  generateAST.cpp compiler.cpp -o compiler
 
-clean:		rm -f compiler
+asm:		assembly.s
+		gcc -m32 assembly.s -o out
+
+clean:		
+		rm -f compiler out

@@ -7,8 +7,13 @@
 class AstNode {
 	public:
 		AstNode();
+		AstNode(std::string _type);
 		AstNode(std::string _type, std::string _value);
 		AstNode(std::string _type, AstNode child);
+		void addType(std::string _type);
+		void addValue(std::string _value);
+		void addNode(AstNode node);
+		void clearNodes();
 		std::string type;
 		std::string value;
 		std::vector< std::shared_ptr<AstNode> > children;

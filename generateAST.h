@@ -19,17 +19,18 @@ class Parser {
 		std::map<int, Token>::iterator look;
 
 		AstNode parseFunction();
+		AstNode parseBody();
 		AstNode parseStatement();
 		AstNode parseExpression();
 
-		std::shared_ptr<AstNode> ast;
 		void printHelper(std::shared_ptr<AstNode> &node);
 
-		static const std::unordered_set<std::string> statement;
+		static const std::unordered_set<std::string> statementDict;
 	public:
 		Parser(std::map<int, Token> _tokenList);
 		void parse();
 		void print();
+		std::shared_ptr<AstNode> ast;
 		
 };
 

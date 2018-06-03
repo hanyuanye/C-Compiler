@@ -2,7 +2,7 @@
 #include "generateAST.h"
 
 const std::string statementArr[] = {"return"};
-const std::unordered_set<std::string> Parser::statement(statementArr, statementArr + sizeof(statementArr)/sizeof(statementArr[0]));
+const std::unordered_set<std::string> Parser::statementDict(statementArr, statementArr + sizeof(statementArr)/sizeof(statementArr[0]));
 
 Parser::Parser(std::map<int, Token> _tokenList) {
 	tokenList = _tokenList;
@@ -38,6 +38,7 @@ void Parser::parse() {
 }
 
 AstNode Parser::parseFunction() {
+	AstNode function("function");
 	Token t = getNext();
 	if (t.type != "int") {
 		abort("type");
@@ -46,6 +47,7 @@ AstNode Parser::parseFunction() {
 	if (t.type != "identifier") {
 		abort("identifier");
 	}
+	function.addValue(t.value);
 	t = getNext();
 	if (t.type != "(") {
 		abort("(");
@@ -58,18 +60,30 @@ AstNode Parser::parseFunction() {
 	if (t.type != "{") {
 		abort("{");
 	}
-	AstNode statement = parseStatement();
+	AstNode body = parseBody();
 	t = getNext();
 	if (t.type != "}") {
 		abort ("}");
 	}
-	AstNode function = AstNode("function", statement);
+	function.addNode(body);
 	return function;
+}
+
+AstNode Parser::parseBody() {
+	AstNode body("body");
+	AstNode statement = parseStatement();
+	auto v = statement.children;
+	statement.clearNodes();
+	body.addNode(statement);
+	for (auto& node : v) {
+		body.addNode(*node);
+	}
+	return body;
 }
 
 AstNode Parser::parseStatement() {
 	Token t = getNext();
-	if (!contains(statement, t.type)) {
+	if (!contains(statementDict, t.type)) {
 		abort("statement");
 	} 	
 	AstNode exp = parseExpression();
@@ -93,7 +107,7 @@ AstNode Parser::parseExpression() {
 	else if (t.type == "number") {
 		value = t.value;
 	}
-	return AstNode("value", value);
+	return AstNode("const", value);
 }
 
 void Parser::print() {
