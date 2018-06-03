@@ -10,8 +10,10 @@ int main(int argc, char** argv)
 	Lexer lexer;
 	lexer.lex(s);
 	Parser parser(lexer.getTokens());
-	parser.parseStatement();
 	for (auto const& t: lexer.getTokens()) {
 		std::cout << t.first << " " << t.second.type << " " << t.second.value << std::endl;
 	}
+
+	parser.parse();
+	parser.print();
 }

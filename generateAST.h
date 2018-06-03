@@ -5,7 +5,9 @@
 #include <unordered_set>
 #include <limits.h>
 #include <cstdlib>
+#include <memory>
 #include "lexer.h"
+#include "AstNode.h"
 
 class Parser {
 	private:
@@ -16,10 +18,19 @@ class Parser {
 		bool contains(std::unordered_set<std::string> dictionary, std::string val);
 		std::map<int, Token>::iterator look;
 
+		AstNode parseFunction();
+		AstNode parseStatement();
+		AstNode parseExpression();
+
+		std::shared_ptr<AstNode> ast;
+		void printHelper(std::shared_ptr<AstNode> &node);
+
 		static const std::unordered_set<std::string> statement;
 	public:
 		Parser(std::map<int, Token> _tokenList);
-		void parseStatement();
+		void parse();
+		void print();
+		
 };
 
 

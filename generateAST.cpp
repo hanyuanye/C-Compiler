@@ -1,3 +1,4 @@
+
 #include "generateAST.h"
 
 const std::string statementArr[] = {"return"};
@@ -30,9 +31,79 @@ void Parser::abort(std::string s) {
 	exit(0);
 }
 
-void Parser::parseStatement() {
+void Parser::parse() {
+	AstNode function = parseFunction();
+	AstNode program("program", function);
+	ast = std::make_shared<AstNode>(program);
+}
+
+AstNode Parser::parseFunction() {
 	Token t = getNext();
-	if (contains(statement, t.type)) {
-		std::cout << "hi" << std::endl;
+	if (t.type != "int") {
+		abort("type");
+	}
+	t = getNext();
+	if (t.type != "identifier") {
+		abort("identifier");
+	}
+	t = getNext();
+	if (t.type != "(") {
+		abort("(");
+	}
+	t = getNext();
+	if (t.type != ")") {
+		abort(")");
+	}
+	t = getNext();
+	if (t.type != "{") {
+		abort("{");
+	}
+	AstNode statement = parseStatement();
+	t = getNext();
+	if (t.type != "}") {
+		abort ("}");
+	}
+	AstNode function = AstNode("function", statement);
+	return function;
+}
+
+AstNode Parser::parseStatement() {
+	Token t = getNext();
+	if (!contains(statement, t.type)) {
+		abort("statement");
 	} 	
+	AstNode exp = parseExpression();
+	AstNode statement("statement", exp);	
+	t = getNext();
+	if (t.type != ";") {
+		abort("semicolon");
+	}
+	return statement;
+}	
+
+AstNode Parser::parseExpression() {
+	Token t = getNext();
+	if (t.type != "idenfitifier" && t.type != "number") {
+		abort("value");
+	}
+	std::string value;
+	if (t.type == "identifier") {
+		value = t.type;
+	} 
+	else if (t.type == "number") {
+		value = t.value;
+	}
+	return AstNode("value", value);
+}
+
+void Parser::print() {
+	printHelper(ast);	
+}
+
+void Parser::printHelper(std::shared_ptr<AstNode> &node) {
+	if (!node) return;
+	std::cout << node->type << std::endl;
+	for (auto &child : node->children) {
+		printHelper(child);
+	}
 }
