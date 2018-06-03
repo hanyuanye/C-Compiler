@@ -2,7 +2,7 @@
 #include <string>
 #include <iostream>
 #include "lexer.h"
-#include "Parser.h"
+#include "generateAST.h"
 std::string code;
 
 void emitln(std::string s) {
