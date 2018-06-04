@@ -16,6 +16,12 @@ AstNode::AstNode(std::string _type, AstNode child) {
 	children.emplace_back(new AstNode(child));
 }
 
+AstNode::AstNode(std::string _type, std::string _value, AstNode child) {
+	type = _type;
+	value = _value;
+	children.emplace_back(new AstNode(child));
+}
+
 void AstNode::addValue(std::string _value) {
 	value = _value;
 }

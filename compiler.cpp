@@ -2,7 +2,7 @@
 #include <string>
 #include <iostream>
 #include "lexer.h"
-#include "generateAST.h"
+#include "Parser.h"
 std::string code;
 
 void emitln(std::string s) {
@@ -29,6 +29,19 @@ void generateAssembly(std::shared_ptr<AstNode> ast) {
 	if (ast->type == "statement") {
 		emitln("ret");
 	}
+	if (ast->type == "unary") {
+		if (ast->value == "-") {
+			emitln("neg	%eax");
+		} 
+		else if (ast->value == "!") {
+			emitln("cmpl	$0, %eax");
+			emitln("movl	$0, %eax");
+			emitln("sete	%al");
+		}
+		else if (ast->value == "~") {
+			emitln("not	%eax");
+		}
+	}
 	for (auto i = ast->children.rbegin(); i != ast->children.rend(); i++) {
 		generateAssembly(*i);
 	}
@@ -36,7 +49,7 @@ void generateAssembly(std::shared_ptr<AstNode> ast) {
 
 int main(int argc, char** argv)
 {
-	std::string s = "int main() {return 42;}";
+	std::string s = "int main() {return !0;}";
 	Lexer lexer;
 	lexer.lex(s);
 	Parser parser(lexer.getTokens());
