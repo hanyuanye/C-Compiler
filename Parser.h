@@ -12,10 +12,12 @@
 class Parser {
 	private:
 		Token getNext();
+		std::string peekNext();
 		std::map<int, Token> tokenList;
 		void expect(std::string s);
 		void abort(std::string s);
 		void abortMatch(std::string s);
+		bool match(std::string s, Token t);
 		bool contains(std::unordered_set<std::string> dictionary, std::string val);
 		std::map<int, Token>::iterator look;
 
@@ -23,12 +25,15 @@ class Parser {
 		AstNode parseBody();
 		AstNode parseStatement();
 		AstNode parseExpression();
+		AstNode parseTerm();
+		AstNode parseFactor();
 		AstNode UnOp(std::string type, AstNode expr);
 
 		void printHelper(std::shared_ptr<AstNode> &node);
 
 		static const std::unordered_set<std::string> statementDict;
-		static const std::unordered_set<std::string> operatorDict;
+		static const std::unordered_set<std::string> addOpDict;
+		static const std::unordered_set<std::string> mulOpDict;
 		static const std::unordered_set<std::string> unaryDict;
 	public:
 		Parser(std::map<int, Token> _tokenList);

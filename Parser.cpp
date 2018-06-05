@@ -1,9 +1,12 @@
+
 #include "Parser.h"
 
 const std::string statementArr[] = {"return"};
 const std::unordered_set<std::string> Parser::statementDict(statementArr, statementArr + sizeof(statementArr)/sizeof(statementArr[0]));
-const std::string operatorsArr[] = {"+","-","*","/"};
-const std::unordered_set<std::string> Parser::operatorDict(operatorsArr, operatorsArr + sizeof(operatorsArr)/sizeof(operatorsArr[0]));
+const std::string addOpArr[] = {"+","-"};
+const std::unordered_set<std::string> Parser::addOpDict(addOpArr, addOpArr + sizeof(addOpArr)/sizeof(addOpArr[0]));
+const std::string mulOpArr[] = {"*","/"};
+const std::unordered_set<std::string> Parser::mulOpDict(mulOpArr, mulOpArr + sizeof(mulOpArr)/sizeof(mulOpArr[0]));
 const std::string unaryArr[] = {"-","~","!"};
 const std::unordered_set<std::string> Parser::unaryDict(unaryArr, unaryArr + sizeof(unaryArr)/sizeof(unaryArr[0]));
 
@@ -21,11 +24,19 @@ Token Parser::getNext() {
 	return t;
 }
 
+std::string Parser::peekNext() {
+	return (*look).second.type;
+}
+
 void Parser::abortMatch(std::string match) {
 	Token t = getNext();
 	if (t.type != match) {
 		abort(match);
 	}
+}
+
+bool Parser::match(std::string match, Token t) {
+	return t.type == match;
 }
 
 bool Parser::contains(const std::unordered_set<std::string> dictionary, std::string value) {
@@ -88,24 +99,46 @@ AstNode Parser::parseStatement() {
 }	
 
 AstNode Parser::parseExpression() {
-	AstNode("const");
-	Token t = getNext();
-	if (!contains(unaryDict, t.type) && t.type != "identifier" && t.type != "number") {
-		abortMatch("expression");
+	AstNode expr("expression");
+	AstNode term = parseTerm();
+	while (contains(addOpDict, peekNext())) {
+		AstNode op("addOp", getNext().type);
+		AstNode nextTerm = parseTerm();
+		op.addNode(nextTerm);
+		expr.addNode(op);
 	}
-	std::string value;
-	if (t.type == "identifier") {
-		value = t.type;
-		return AstNode("const", value);
-	} 
+	expr.addNode(term);
+	return expr;
+}
+
+AstNode Parser::parseTerm() {
+	AstNode term("term");
+	AstNode factor = parseFactor();
+	while (contains(mulOpDict, peekNext())) {
+		AstNode op("mulOp", getNext().type);
+		AstNode nextFactor = parseFactor();
+		op.addNode(nextFactor);
+		term.addNode(op);
+	}
+	term.addNode(factor); 	
+	return term;
+}
+
+AstNode Parser::parseFactor() {
+	Token t = getNext();
+	if (match("(", t)) {
+		AstNode expr = parseExpression();
+		abortMatch(")");
+		return expr;
+	}
 	else if (t.type == "number") {
-		value = t.value;
-		return AstNode("const", value);
+		return AstNode("const",t.value);
 	}
 	else if (contains(unaryDict, t.type)) {
-		AstNode expr = parseExpression();
+		AstNode expr = parseFactor();
 		return UnOp(t.type, expr);
 	}
+	abort("expression");
 }
 
 AstNode Parser::UnOp(std::string type, AstNode expr) {
