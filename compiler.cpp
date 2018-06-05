@@ -4,9 +4,18 @@
 #include "lexer.h"
 #include "Parser.h"
 #include "AsmGenerator.h"
+
+std::string readFile(std::string fileString) {
+	std::ifstream file(fileString);
+	std::stringstream buffer;
+	buffer << file.rdbuf();
+	file.close();
+	std::string code = buffer.str();
+	return code;
+}
 int main(int argc, char** argv)
 {
-	std::string code = "int main() {return 0||0;}"; //edit this string to edit source code being compiled
+	std::string code = readFile("test.txt");
 	Lexer lexer;
 	lexer.lex(code);
 	Parser parser(lexer.getTokens());
