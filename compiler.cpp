@@ -6,7 +6,7 @@
 #include "AsmGenerator.h"
 int main(int argc, char** argv)
 {
-	std::string code = "int main() {return 1<=5;}"; //edit this string to edit source code being compiled
+	std::string code = "int main() {return 0||0;}"; //edit this string to edit source code being compiled
 	Lexer lexer;
 	lexer.lex(code);
 	Parser parser(lexer.getTokens());

@@ -28,6 +28,29 @@ void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 		emitln("ret");
 	}
 
+	if (ast->type == "boolOp") {
+		if (ast->value == "||") {
+			emitln("push	%eax");
+			generateAsmChildren(ast);
+			emitln("pop	%ecx");
+			emitln("orl	%ecx, %eax");
+			emitln("movl	$0, %eax");
+			emitln("setne	%al");
+		}
+		if (ast->value == "&&") {
+			emitln("push	%eax");
+			generateAsmChildren(ast);
+			emitln("pop	%ecx");
+			emitln("cmpl	$0, %ecx");
+			emitln("setne	%cl");
+			emitln("cmpl	$0, %eax");
+			emitln("movl	$0, %eax");
+			emitln("setne	%al");
+			emitln("andb	%cl, %al");
+		}
+		return;
+	}
+
 	if (ast->type == "equalityOp") {
 		if (ast->value == "==") {
 			emitln("push	%eax");
