@@ -9,6 +9,10 @@ const std::string mulOpArr[] = {"*","/"};
 const std::unordered_set<std::string> Parser::mulOpDict(mulOpArr, mulOpArr + sizeof(mulOpArr)/sizeof(mulOpArr[0]));
 const std::string unaryArr[] = {"-","~","!"};
 const std::unordered_set<std::string> Parser::unaryDict(unaryArr, unaryArr + sizeof(unaryArr)/sizeof(unaryArr[0]));
+const std::string relOpArr[] = {"<", ">", "<=", ">="};
+const std::unordered_set<std::string> Parser::relOpDict(relOpArr, relOpArr+sizeof(relOpArr)/sizeof(relOpArr[0]));
+const std::string equalityOpArr[] = {"==", "!="};
+const std::unordered_set<std::string> Parser::equalityOpDict(equalityOpArr, equalityOpArr+sizeof(equalityOpArr)/sizeof(equalityOpArr[0]));
 
 Parser::Parser(std::map<int, Token> _tokenList) {
 	tokenList = _tokenList;
@@ -35,8 +39,8 @@ void Parser::abortMatch(std::string match) {
 	}
 }
 
-bool Parser::match(std::string match, Token t) {
-	return t.type == match;
+bool Parser::match(std::string match, std::string type) {
+	return type == match;
 }
 
 bool Parser::contains(const std::unordered_set<std::string> dictionary, std::string value) {
@@ -100,6 +104,65 @@ AstNode Parser::parseStatement() {
 
 AstNode Parser::parseExpression() {
 	AstNode expr("expression");
+	AstNode boolTerm = parseAnd();
+	while (match("||", peekNext())) {
+		AstNode op("boolOp", getNext().type);
+		AstNode nextTerm = parseAnd();
+		op.addNode(nextTerm);
+		expr.addNode(op);
+	}
+	expr.addNode(boolTerm);
+	return expr;
+}
+
+AstNode Parser::parseAnd() {
+	AstNode boolTerm("boolTerm");
+	AstNode equalityTerm = parseEquality();
+	while (match("&&", peekNext())) {
+		AstNode op("boolOp", getNext().type);
+		AstNode nextTerm;
+		if (match("(", peekNext())) {
+			nextTerm = parseExpression();
+			abortMatch(")");
+		}
+		else {
+			nextTerm = parseEquality();
+		}
+		op.addNode(nextTerm);
+		boolTerm.addNode(op);
+	}
+	boolTerm.addNode(equalityTerm);
+	return boolTerm;
+}
+
+AstNode Parser::parseEquality() {
+	AstNode equalityTerm("equalityTerm");
+	AstNode relTerm = parseRelational();
+	while (contains(equalityOpDict, peekNext())) {
+		AstNode op("equalityOp", getNext().type);
+		AstNode nextTerm = parseRelational();
+		op.addNode(nextTerm);
+		equalityTerm.addNode(op);
+	}
+	equalityTerm.addNode(relTerm);
+	return equalityTerm;
+}
+
+AstNode Parser::parseRelational() {
+	AstNode relationalTerm("relationalTerm");
+	AstNode arith = parseArithmetic();
+	while (contains(relOpDict, peekNext())) {
+		AstNode op("relOp", getNext().type); 
+		AstNode nextArith = parseArithmetic();
+		op.addNode(nextArith);
+		relationalTerm.addNode(op);
+	}
+	relationalTerm.addNode(arith);
+	return relationalTerm;
+}
+
+AstNode Parser::parseArithmetic() {
+	AstNode expr("arithmetic");
 	AstNode term = parseTerm();
 	while (contains(addOpDict, peekNext())) {
 		AstNode op("addOp", getNext().type);
@@ -126,12 +189,12 @@ AstNode Parser::parseTerm() {
 
 AstNode Parser::parseFactor() {
 	Token t = getNext();
-	if (match("(", t)) {
+	if (match("(", t.type)) {
 		AstNode expr = parseExpression();
 		abortMatch(")");
 		return expr;
 	}
-	else if (t.type == "number") {
+	else if (match("number", t.type)) {
 		return AstNode("const",t.value);
 	}
 	else if (contains(unaryDict, t.type)) {
