@@ -1,5 +1,5 @@
 # C Compiler
-C Compiler compiles a subset of C into x86 assembly. It currently supports returning integers from a singular main function. 
+C Compiler compiles a subset of C into x86 assembly. It currently supports returning mathematical or boolean expressions. 
 
 ## Instructions
 
