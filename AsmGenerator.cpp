@@ -68,6 +68,23 @@ void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 			emitln("movl	$0, %eax");
 			emitln("setg	%al");
 		}
+		if (ast->value == "<=") {
+			emitln("push	%eax");
+			generateAsmChildren(ast);
+			emitln("pop	%ecx");
+			emitln("cmpl	%ecx, %eax");
+			emitln("movl	$0, %eax");
+			emitln("setge	%al");
+		}
+		if (ast->value == ">=") {
+			emitln("push	%eax");
+			generateAsmChildren(ast);
+			emitln("pop	%ecx");
+			emitln("cmpl	%ecx, %eax");
+			emitln("movl	$0, %eax");
+			emitln("setle	%al");
+		}
+
 		return;
 	}
 
