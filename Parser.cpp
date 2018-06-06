@@ -84,16 +84,24 @@ AstNode Parser::parseFunction() {
 AstNode Parser::parseBody() {
 	AstNode body("body");
 	AstNode line;
-	if (contains(statementDict, peekNext())) {
-		line = parseStatement();
+	bool returnInScope = false;
+	while (contains(statementDict, peekNext()) || contains(typeDict, peekNext())) {
+		if (contains(statementDict, peekNext())) {
+			returnInScope = match("return", peekNext());
+			line = parseStatement();
+		}
+		else if (contains(typeDict, peekNext())) {
+			line = parseDecl();
+		}
+		body.addNodeFront(line);
 	}
-	else if (contains(typeDict, peekNext())) {
-		line = parseDecl();
+	if (!returnInScope) {
+		AstNode statementBlock("statementBlock");
+		AstNode ret("statement", "return");
+		statementBlock.addNode(ret);
+		statementBlock.addNode(AstNode("const", "0"));
+		body.addNodeFront(statementBlock);
 	}
-	else {
-		abort("line");
-	}
-	body.addNode(line);
 	return body;
 }
 
@@ -105,19 +113,21 @@ AstNode Parser::parseDecl() {
 		abort("identifier");
 	}
 	AstNode variable("decl", t.value);
-	decl.addNode(variable);
 	if (match("=", peekNext())) {
-		AstNode assign = parseAssign();
+		AstNode assign = parseAssign(t.value);
 		decl.addNode(assign);
 	}
+	decl.addNode(variable);
 	abortMatch(";");
 	return decl;
 }
 
-AstNode Parser::parseAssign() {
+AstNode Parser::parseAssign(std::string value) {
 	AstNode assign("assignOp", "=");
 	Token t = getNext(); //incrementing by one token to pass assingment operator
+	AstNode assignVar("identAssign", value);
 	AstNode expr = parseExpression(); //getting expression to parse with
+	assign.addNode(assignVar);
 	assign.addNode(expr);//since in post order, want to identify expression first when generating assembly
 	return assign;
 }
@@ -230,6 +240,9 @@ AstNode Parser::parseFactor() {
 	}
 	else if (match("number", t.type)) {
 		return AstNode("const",t.value);
+	}
+	else if (match("identifier", t.type)) {
+		return AstNode("accessIdent", t.value);
 	}
 	else if (contains(unaryDict, t.type)) {
 		AstNode expr = parseFactor();
