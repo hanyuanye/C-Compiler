@@ -1,7 +1,7 @@
 #include "lexer.h"
 
 Lexer::Lexer() {
-	typeRegex = std::regex("return|int|;|\\(|\\)|\\{|\\}|[_a-zA-Z][_a-zA-Z0-9]{0,30}*|-|~|!|\\+|\\/|\\*|&&|\\|\\||<[=>]?|==|>=?|\\&\\&|\\|\\|");
+	typeRegex = std::regex("return|int|;|\\(|\\)|\\{|\\}|[_a-zA-Z][_a-zA-Z0-9]{0,30}*|-|~|!|\\+|\\/|\\*|&&|\\|\\||<[=>]?|==|>=?|\\&\\&|\\|\\||=");
 	numRegex = std::regex("[0-9]+");
 	std::vector<std::string> typeArr = {
 		"return",
@@ -26,7 +26,8 @@ Lexer::Lexer() {
 		">=",
 		"<",
 		"<=",
-		"=="
+		"==",
+		"="
 	};
 	for (const auto& s : typeArr) {
 		typeDictionary.insert(s);
