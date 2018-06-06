@@ -3,6 +3,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <deque>
 #include <memory>
 class AstNode {
 	public:
@@ -14,9 +15,10 @@ class AstNode {
 		void addType(std::string _type);
 		void addValue(std::string _value);
 		void addNode(AstNode node);
+		void addNodeFront(AstNode node);
 		void clearNodes();
 		std::string type;
 		std::string value;
-		std::vector< std::shared_ptr<AstNode> > children;
+		std::deque< std::shared_ptr<AstNode> > children;
 };
 #endif

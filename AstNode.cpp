@@ -30,6 +30,10 @@ void AstNode::addNode(AstNode node) {
 	children.emplace_back(new AstNode(node));
 }
 
+void AstNode::addNodeFront(AstNode node) {
+	children.emplace_front(new AstNode(node));
+}
+
 void AstNode::clearNodes() {
 	children.clear();
 }
