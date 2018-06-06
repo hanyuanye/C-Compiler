@@ -1,5 +1,10 @@
 #include "AsmGenerator.h"
 
+AsmGenerator::AsmGenerator() {
+	scopeCount = 0;
+	variableMap.push_back(std::unordered_map<std::string, int>());
+}
+
 void AsmGenerator::emitln(std::string s) {
 	code += s + "\n";
 	std::cout << s << std::endl;
@@ -12,12 +17,21 @@ void AsmGenerator::emit() {
 	asmm.close();
 }
 
+void AsmGenerator::error(std::string msg) {
+	std::cout << msg << std::endl;
+	exit(0);
+}
+
 void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 	if (!ast) return;
 
 	if (ast->type == "function") {
+		stackIndex = 0;
 		emitln(std::string(".globl ") + ast->value);
 		emitln(std::string(ast->value + ":"));
+		emitln("push	%ebp");
+		emitln("movl	%esp, %ebp");
+		stackIndex = -4;
 	}
 
 	if (ast->type == "const") {
@@ -25,7 +39,31 @@ void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 	}
 
 	if (ast->type == "statement") {
-		emitln("ret");
+		if (ast->value == "return") {
+			emitln("movl	%ebp, %esp");
+			emitln("pop	%ebp");
+			emitln("ret");
+		}
+	}
+
+	if (ast->type == "identAssign") {
+		auto offset = variableMap[scopeCount].find(ast->value);
+		emitln(std::string("movl	%eax, ") + std::to_string((*offset).second) + "(%ebp)");
+	}
+
+	if (ast->type == "identAccess") {
+		auto offset = variableMap[scopeCount].find(ast->value);
+		emitln(std::string("movl	") + std::to_string((*offset).second) + "(%ebp), %eax");
+	}
+
+	if (ast->type == "decl" ) {
+		for (const auto &map : variableMap) {
+			if (map.find(ast->value) != map.end()) {
+				error("redefinition of variable");
+			}
+		}
+		variableMap[scopeCount].insert(std::make_pair(ast->value, stackIndex));
+		stackIndex -= 4;
 	}
 
 	if (ast->type == "boolOp") {
