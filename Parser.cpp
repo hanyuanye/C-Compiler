@@ -13,6 +13,8 @@ const std::string relOpArr[] = {"<", ">", "<=", ">="};
 const std::unordered_set<std::string> Parser::relOpDict(relOpArr, relOpArr+sizeof(relOpArr)/sizeof(relOpArr[0]));
 const std::string equalityOpArr[] = {"==", "!="};
 const std::unordered_set<std::string> Parser::equalityOpDict(equalityOpArr, equalityOpArr+sizeof(equalityOpArr)/sizeof(equalityOpArr[0]));
+const std::string typeArr[] = {"int"};
+const std::unordered_set<std::string> Parser::typeDict(typeArr, typeArr+sizeof(typeArr)/sizeof(typeArr[0]));
 
 Parser::Parser(std::map<int, Token> _tokenList) {
 	tokenList = _tokenList;
@@ -81,26 +83,58 @@ AstNode Parser::parseFunction() {
 
 AstNode Parser::parseBody() {
 	AstNode body("body");
-	AstNode statement = parseStatement();
-	auto v = statement.children;
-	statement.clearNodes();
-	body.addNode(statement);
-	for (auto& node : v) {
-		body.addNode(*node);
+	AstNode line;
+	if (contains(statementDict, peekNext())) {
+		line = parseStatement();
 	}
+	else if (contains(typeDict, peekNext())) {
+		line = parseDecl();
+	}
+	else {
+		abort("line");
+	}
+	body.addNode(line);
 	return body;
 }
 
+AstNode Parser::parseDecl() {
+	AstNode decl("declaration");
+	Token t = getNext();
+	t = getNext();
+	if (!match("identifier", t.type)) {
+		abort("identifier");
+	}
+	AstNode variable("decl", t.value);
+	decl.addNode(variable);
+	if (match("=", peekNext())) {
+		AstNode assign = parseAssign();
+		decl.addNode(assign);
+	}
+	abortMatch(";");
+	return decl;
+}
+
+AstNode Parser::parseAssign() {
+	AstNode assign("assignOp", "=");
+	Token t = getNext(); //incrementing by one token to pass assingment operator
+	AstNode expr = parseExpression(); //getting expression to parse with
+	assign.addNode(expr);//since in post order, want to identify expression first when generating assembly
+	return assign;
+}
+
 AstNode Parser::parseStatement() {
+	AstNode statementBlock("statementBlock");
 	Token t = getNext();
 	if (!contains(statementDict, t.type)) {
 		abortMatch("statement");
-	} 	
+	}
 	AstNode exp = parseExpression();
-	AstNode statement("statement", exp);
-	abortMatch(";");	
-	return statement;
-}	
+	AstNode statement("statement", t.type);
+	statementBlock.addNode(statement);
+	statementBlock.addNode(exp);
+	abortMatch(";");
+	return statementBlock;
+}
 
 AstNode Parser::parseExpression() {
 	AstNode expr("expression");

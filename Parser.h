@@ -23,6 +23,8 @@ class Parser {
 
 		AstNode parseFunction();
 		AstNode parseBody();
+		AstNode parseDecl();
+		AstNode parseAssign();
 		AstNode parseStatement();
 		AstNode parseExpression();
 		AstNode parseAnd();
@@ -41,6 +43,8 @@ class Parser {
 		static const std::unordered_set<std::string> unaryDict;
 		static const std::unordered_set<std::string> relOpDict;
 		static const std::unordered_set<std::string> equalityOpDict;
+		static const std::unordered_set<std::string> declDict;
+		static const std::unordered_set<std::string> typeDict;
 	public:
 		Parser(std::map<int, Token> _tokenList);
 		void parse();
