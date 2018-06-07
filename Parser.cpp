@@ -92,7 +92,7 @@ AstNode Parser::parseBody() {
 	AstNode line;
 	bool returnInScope = false;
 	int declarations = 0;
-	while (contains(statementDict, peekNext()) || contains(typeDict, peekNext())) {
+	while (contains(statementDict, peekNext()) || contains(typeDict, peekNext()) || match("identifier", peekNext())) {
 		if (contains(statementDict, peekNext())) {
 			if (match("return", peekNext())) {
 				returnInScope = true;
@@ -105,6 +105,9 @@ AstNode Parser::parseBody() {
 		else if (contains(typeDict, peekNext())) {
 			declarations++;
 			line = parseDecl();
+		}
+		else if (match("identifier", peekNext())) {
+			line = parseAssign(getNext().value);
 		}
 		body.addNodeFront(line);
 	}
