@@ -22,16 +22,24 @@ void AsmGenerator::error(std::string msg) {
 	exit(0);
 }
 
+std::string AsmGenerator::getOffset(std::string identifier) {
+	auto offset = variableMap[scopeCount].find(identifier);
+	if (offset == variableMap[scopeCount].end()) {
+		error("unknown identifier");
+	}
+	return std::to_string((*offset).second);
+}
+
 void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 	if (!ast) return;
 
 	if (ast->type == "function") {
-		stackIndex = 0;
+		varStackIndex = 0;
 		emitln(std::string(".globl ") + ast->value);
 		emitln(std::string(ast->value + ":"));
 		emitln("push	%ebp");
 		emitln("movl	%esp, %ebp");
-		stackIndex = -4;
+		varStackIndex = 0;
 	}
 
 	if (ast->type == "const") {
@@ -47,13 +55,17 @@ void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 	}
 
 	if (ast->type == "identAssign") {
-		auto offset = variableMap[scopeCount].find(ast->value);
-		emitln(std::string("movl	%eax, ") + std::to_string((*offset).second) + "(%ebp)");
+		std::string offset = getOffset(ast->value);
+		emitln(std::string("movl	%eax, ") + offset  + "(%ebp)");
 	}
 
 	if (ast->type == "identAccess") {
-		auto offset = variableMap[scopeCount].find(ast->value);
-		emitln(std::string("movl	") + std::to_string((*offset).second) + "(%ebp), %eax");
+		std::string offset = getOffset(ast->value);
+		emitln(std::string("movl	") + offset + "(%ebp), %eax");
+	}
+
+	if (ast->type == "numDecls") {
+		currStack = -4 *std::stoi(ast->value);
 	}
 
 	if (ast->type == "decl" ) {
@@ -62,23 +74,23 @@ void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 				error("redefinition of variable");
 			}
 		}
-		variableMap[scopeCount].insert(std::make_pair(ast->value, stackIndex));
-		stackIndex -= 4;
+		variableMap[scopeCount].insert(std::make_pair(ast->value, varStackIndex));
+		varStackIndex -= 4;
 	}
 
 	if (ast->type == "boolOp") {
 		if (ast->value == "||") {
-			emitln("push	%eax");
+			push("%eax", 4);
 			generateAsmChildren(ast);
-			emitln("pop	%ecx");
+			pop("%ecx");
 			emitln("orl	%ecx, %eax");
 			emitln("movl	$0, %eax");
 			emitln("setne	%al");
 		}
 		if (ast->value == "&&") {
-			emitln("push	%eax");
+			push("%eax", 4);
 			generateAsmChildren(ast);
-			emitln("pop	%ecx");
+			pop("%ecx");
 			emitln("cmpl	$0, %ecx");
 			emitln("setne	%cl");
 			emitln("cmpl	$0, %eax");
@@ -91,18 +103,18 @@ void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 
 	if (ast->type == "equalityOp") {
 		if (ast->value == "==") {
-			emitln("push	%eax");
+			push("%eax", 4);
 			generateAsmChildren(ast);
-			emitln("pop	%ecx");
+			pop("%ecx");
 			emitln("cmpl	%ecx, %eax");
 			emitln("movl	$0, %eax");
 			emitln("sete	%al");
 		}
 
 		if (ast->value == "!=") {
-			emitln("push	%eax");
+			push("%eax", 4);
 			generateAsmChildren(ast);
-			emitln("pop	%ecx");
+			pop("%ecx");
 			emitln("cmpl	%ecx, %eax");
 			emitln("movl	$0, %eax");
 			emitln("setne	%al");
@@ -113,34 +125,34 @@ void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 
 	if (ast->type == "relOp") {
 		if (ast->value == ">") {
-			emitln("push	%eax");
+			push("%eax", 4);
 			generateAsmChildren(ast);
-			emitln("pop	%ecx");
+			pop("%ecx");
 			emitln("cmpl	%ecx, %eax");
 			emitln("movl	$0, %eax");
 			emitln("setl	%al");
 		}
 
 		if (ast->value == "<") {
-			emitln("push	%eax");
+			push("%eax", 4);
 			generateAsmChildren(ast);
-			emitln("pop	%ecx");
+			pop("%ecx");
 			emitln("cmpl	%ecx, %eax");
 			emitln("movl	$0, %eax");
 			emitln("setg	%al");
 		}
 		if (ast->value == "<=") {
-			emitln("push	%eax");
+			push("%eax", 4);
 			generateAsmChildren(ast);
-			emitln("pop	%ecx");
+			pop("%ecx");
 			emitln("cmpl	%ecx, %eax");
 			emitln("movl	$0, %eax");
 			emitln("setge	%al");
 		}
 		if (ast->value == ">=") {
-			emitln("push	%eax");
+			push("%eax", 4);
 			generateAsmChildren(ast);
-			emitln("pop	%ecx");
+			pop("%ecx");
 			emitln("cmpl	%ecx, %eax");
 			emitln("movl	$0, %eax");
 			emitln("setle	%al");
@@ -151,16 +163,16 @@ void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 
 	if (ast->type == "addOp") {
 		if (ast->value == "+") {
-			emitln("push	%eax");
+			push("%eax", 4);
 			generateAsmChildren(ast);
-			emitln("pop	%ecx");
+			pop("%ecx");
 			emitln("addl	%ecx, %eax");
 		}
 
 		if (ast->value == "-") {
-			emitln("push	%eax");
+			push("%eax", 4);
 			generateAsmChildren(ast);
-			emitln("pop	%ecx");
+			pop("%ecx");
 			emitln("subl	%eax, %ecx");
 			emitln("movl	%ecx, %eax");
 		}
@@ -170,16 +182,16 @@ void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 	
 	if (ast->type == "mulOp") {
 		if (ast->value == "*") {
-			emitln("push	%eax");
+			push("%eax", 4);
 			generateAsmChildren(ast);
-			emitln("pop	%ecx");
+			pop("%ecx");
 			emitln("imul	%ecx, %eax");
 		}
 
 		if (ast->value == "/") {
-			emitln("push	%eax");
+			push("%eax", 4);
 			generateAsmChildren(ast);
-			emitln("pop	%ecx");
+			pop("%ecx");
 			emitln("push	%eax");
 			emitln("movl	%ecx, %eax");
 			emitln("pop	%ecx");
@@ -215,3 +227,17 @@ void AsmGenerator::generateAsmChildren(std::shared_ptr<AstNode> ast) {
 	}
 }
 
+void AsmGenerator::push(std::string value, int increment) {
+	currStack -= increment;
+	emitln(std::string("movl	") + value + ", " + std::to_string(currStack)  + "(%ebp)");
+	increments.push_back(increment);
+}
+
+void AsmGenerator::pop(std::string value) {
+	if (increments.empty()) {
+		error("stack has no elements");
+	}
+	emitln(std::string("movl	") + std::to_string(currStack)  + "(%ebp), " + value);
+	currStack += increments.back();	
+	increments.pop_back();
+}

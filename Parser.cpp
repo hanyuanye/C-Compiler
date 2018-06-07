@@ -85,16 +85,20 @@ AstNode Parser::parseBody() {
 	AstNode body("body");
 	AstNode line;
 	bool returnInScope = false;
+	int declarations = 0;
 	while (contains(statementDict, peekNext()) || contains(typeDict, peekNext())) {
 		if (contains(statementDict, peekNext())) {
 			returnInScope = match("return", peekNext());
 			line = parseStatement();
 		}
 		else if (contains(typeDict, peekNext())) {
+			declarations++;
 			line = parseDecl();
 		}
 		body.addNodeFront(line);
 	}
+	AstNode numDecls("numDecls", std::to_string(declarations));
+	body.addNode(numDecls);
 	if (!returnInScope) {
 		AstNode statementBlock("statementBlock");
 		AstNode ret("statement", "return");
@@ -242,7 +246,7 @@ AstNode Parser::parseFactor() {
 		return AstNode("const",t.value);
 	}
 	else if (match("identifier", t.type)) {
-		return AstNode("accessIdent", t.value);
+		return AstNode("identAccess", t.value);
 	}
 	else if (contains(unaryDict, t.type)) {
 		AstNode expr = parseFactor();
