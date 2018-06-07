@@ -1,5 +1,6 @@
 # C Compiler
-C Compiler compiles a subset of C into x86 assembly. It currently supports returning mathematical or boolean expressions. 
+C Compiler compiles a subset of C into x86 assembly. It currently supports local
+variables, multi statement functions and mathematical/boolean expressions.  
 
 ## Instructions
 
