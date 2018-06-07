@@ -78,6 +78,15 @@ void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 		varStackIndex -= 4;
 	}
 
+	if (ast->type == "ifBlock") {
+		emitln("cmpl	$0, %eax");
+		emitln("je	_branch");
+	}
+
+	if (ast->type == "elseBody") {
+		emitln("_branch:");
+	}
+
 	if (ast->type == "boolOp") {
 		if (ast->value == "||") {
 			push("%eax", 4);

@@ -115,6 +115,7 @@ AstNode Parser::parseBody() {
 }
 
 AstNode Parser::parseIfStatement() {
+	AstNode ifBlock("ifBlock");
 	AstNode ifStatement("ifOp");
 	Token t = getNext();
 	abortMatch("(");
@@ -122,14 +123,22 @@ AstNode Parser::parseIfStatement() {
 	abortMatch(")");
 	abortMatch("{");
 	AstNode ifBody = parseBody();
+	ifBody.type = "ifBody";
 	abortMatch("}");
 	if (match("else", peekNext())) {
+		Token t = getNext();
 		abortMatch("{");
 		AstNode elseBody = parseBody();
-		ifStatement.addNode(elseBody);
+		elseBody.type = "elseBody";
+		ifBlock.addNode(elseBody);
 		abortMatch("}");
 	}
-	ifStatement.addNode(ifBody);
+	else {
+		AstNode elseBody("elseBody");
+		ifBlock.addNode(elseBody);
+	}
+	ifBlock.addNode(ifBody);
+	ifStatement.addNode(ifBlock);
 	ifStatement.addNode(condition);
 	return ifStatement;
 }
