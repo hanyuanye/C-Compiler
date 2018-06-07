@@ -1,7 +1,6 @@
-
 #include "Parser.h"
 
-const std::string statementArr[] = {"return"};
+const std::string statementArr[] = {"return", "if"};
 const std::unordered_set<std::string> Parser::statementDict(statementArr, statementArr + sizeof(statementArr)/sizeof(statementArr[0]));
 const std::string addOpArr[] = {"+","-"};
 const std::unordered_set<std::string> Parser::addOpDict(addOpArr, addOpArr + sizeof(addOpArr)/sizeof(addOpArr[0]));
@@ -76,6 +75,13 @@ AstNode Parser::parseFunction() {
 	abortMatch(")");
 	abortMatch("{");
 	AstNode body = parseBody();
+	if (!body.scopeFlag) {
+		AstNode statementBlock("statementBlock");
+		AstNode ret("statement", "return");
+		statementBlock.addNode(ret);
+		statementBlock.addNode(AstNode("const", "0"));
+		body.addNodeFront(statementBlock);
+	}
 	abortMatch("}");
 	function.addNode(body);
 	return function;
@@ -88,8 +94,13 @@ AstNode Parser::parseBody() {
 	int declarations = 0;
 	while (contains(statementDict, peekNext()) || contains(typeDict, peekNext())) {
 		if (contains(statementDict, peekNext())) {
-			returnInScope = match("return", peekNext());
-			line = parseStatement();
+			if (match("return", peekNext())) {
+				returnInScope = true;
+				line = parseReturnStatement();
+			}
+			else if (match("if", peekNext())) {
+				line = parseIfStatement();
+			}
 		}
 		else if (contains(typeDict, peekNext())) {
 			declarations++;
@@ -99,14 +110,28 @@ AstNode Parser::parseBody() {
 	}
 	AstNode numDecls("numDecls", std::to_string(declarations));
 	body.addNode(numDecls);
-	if (!returnInScope) {
-		AstNode statementBlock("statementBlock");
-		AstNode ret("statement", "return");
-		statementBlock.addNode(ret);
-		statementBlock.addNode(AstNode("const", "0"));
-		body.addNodeFront(statementBlock);
-	}
+	body.scopeFlag = returnInScope;
 	return body;
+}
+
+AstNode Parser::parseIfStatement() {
+	AstNode ifStatement("ifOp");
+	Token t = getNext();
+	abortMatch("(");
+	AstNode condition = parseExpression();
+	abortMatch(")");
+	abortMatch("{");
+	AstNode ifBody = parseBody();
+	abortMatch("}");
+	if (match("else", peekNext())) {
+		abortMatch("{");
+		AstNode elseBody = parseBody();
+		ifStatement.addNode(elseBody);
+		abortMatch("}");
+	}
+	ifStatement.addNode(ifBody);
+	ifStatement.addNode(condition);
+	return ifStatement;
 }
 
 AstNode Parser::parseDecl() {
@@ -136,11 +161,11 @@ AstNode Parser::parseAssign(std::string value) {
 	return assign;
 }
 
-AstNode Parser::parseStatement() {
+AstNode Parser::parseReturnStatement() {
 	AstNode statementBlock("statementBlock");
 	Token t = getNext();
 	if (!contains(statementDict, t.type)) {
-		abortMatch("statement");
+		abort("statement");
 	}
 	AstNode exp = parseExpression();
 	AstNode statement("statement", t.type);

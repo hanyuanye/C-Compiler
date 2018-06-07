@@ -19,6 +19,7 @@ class AstNode {
 		void clearNodes();
 		std::string type;
 		std::string value;
+		bool scopeFlag; //Scope flag is used only by function nodes to determine if a return statement was declared in the function body
 		std::deque< std::shared_ptr<AstNode> > children;
 };
 #endif
