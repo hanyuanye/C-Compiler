@@ -123,14 +123,7 @@ AstNode Parser::parseBody() {
 
 AstNode Parser::parseWhileStatement() {
 	AstNode whileBlock("whileBlock");
-	AstNode ifBlock = parseIfStatement();
-	ifBlock.addNode(AstNode("loop"));
-	whileBlock.addNode(ifBlock);
-	return whileBlock;
-}
-
-AstNode Parser::parseIfStatement() {
-	AstNode ifBlock("ifBlock");
+	AstNode ifBlock("ifBody");
 	AstNode ifStatement("ifOp");
 	Token t = getNext();
 	abortMatch("(");
@@ -138,7 +131,27 @@ AstNode Parser::parseIfStatement() {
 	abortMatch(")");
 	abortMatch("{");
 	AstNode ifBody = parseBody();
-	ifBody.type = "ifBody";
+	abortMatch("}");
+	ifBlock.addNode(AstNode("elseBody"));
+	ifBlock.addNode(AstNode("loop"));
+	ifBlock.addNode(ifBody);
+	ifStatement.addNode(ifBlock);
+	ifStatement.addNode(condition);
+//	whileBlock.addNode(AstNode("loop"));
+//	AstNode ifStatement = parseIfStatement();
+	whileBlock.addNode(ifStatement);
+	return whileBlock;
+}
+
+AstNode Parser::parseIfStatement() {
+	AstNode ifBlock("ifBody");
+	AstNode ifStatement("ifOp");
+	Token t = getNext();
+	abortMatch("(");
+	AstNode condition = parseExpression();
+	abortMatch(")");
+	abortMatch("{");
+	AstNode ifBody = parseBody();
 	abortMatch("}");
 	if (match("else", peekNext())) {
 		Token t = getNext();

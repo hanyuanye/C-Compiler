@@ -29,8 +29,9 @@ class AsmGenerator {
 		int branchCount;
 		std::string code;
 
-		int pushBranch();
-		int popBranch();
+		std::string pushBranch();
+		std::string popBranch();
+		std::string popSecondBranch();
 		void pushScope();
 		void popScope();
 };

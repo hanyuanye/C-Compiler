@@ -80,15 +80,23 @@ void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 		varStackIndex -= 4;
 	}
 
-	if (ast->type == "ifBlock") {
-		pushScope();		
+	if(ast->type == "whileBlock") {
+		emitln(std::string("_branch") + pushBranch() + ":");
+	}
+
+	if (ast->type == "loop") {
+		emitln("jmp	_branch" + popSecondBranch());
+	}
+
+	if (ast->type == "ifBody") {
+		pushScope();
 		emitln("cmpl	$0, %eax");
-		emitln("je	_branch" + std::to_string(pushBranch()));
+		emitln("je	_branch" + pushBranch());
 	}
 
 	if (ast->type == "elseBody") {
 		popScope();
-		emitln(std::string("_branch") + std::to_string(popBranch()) + ":");
+		emitln(std::string("_branch") + popBranch() + ":");
 	}
 
 	if (ast->type == "boolOp") {
@@ -255,16 +263,22 @@ void AsmGenerator::pop(std::string value) {
 	increments.pop_back();
 }
 
-int AsmGenerator::pushBranch() {
+std::string AsmGenerator::pushBranch() {
 	branchCount++;
 	branchStack.push_back(branchCount);
-	return branchCount;
+	return std::to_string(branchCount);
 }
 
-int AsmGenerator::popBranch() {
+std::string AsmGenerator::popBranch() {
 	int branch = branchStack.back();
 	branchStack.pop_back();
-	return branch;
+	return std::to_string(branch);
+}
+
+std::string AsmGenerator::popSecondBranch() {
+	int branch = branchStack.at(branchStack.size() - 2);
+	branchStack.erase(branchStack.begin() + branchStack.size() - 2);
+	return std::to_string(branch);
 }
 
 void AsmGenerator::pushScope() {
