@@ -36,6 +36,7 @@ std::string Parser::peekNext() {
 void Parser::abortMatch(std::string match) {
 	Token t = getNext();
 	if (t.type != match) {
+		std::cout << t.type << std::endl;
 		abort(match);
 	}
 }
@@ -123,6 +124,7 @@ AstNode Parser::parseBody() {
 AstNode Parser::parseWhileStatement() {
 	AstNode whileBlock("whileBlock");
 	AstNode ifBlock = parseIfStatement();
+	ifBlock.addNode(AstNode("loop"));
 	whileBlock.addNode(ifBlock);
 	return whileBlock;
 }
@@ -168,8 +170,10 @@ AstNode Parser::parseDecl() {
 		AstNode assign = parseAssign(t.value);
 		decl.addNode(assign);
 	}
+	else {
+		abortMatch(";");
+	}
 	decl.addNode(variable);
-	abortMatch(";");
 	return decl;
 }
 
@@ -180,6 +184,7 @@ AstNode Parser::parseAssign(std::string value) {
 	AstNode expr = parseExpression(); //getting expression to parse with
 	assign.addNode(assignVar);
 	assign.addNode(expr);//since in post order, want to identify expression first when generating assembly
+	abortMatch(";");
 	return assign;
 }
 
