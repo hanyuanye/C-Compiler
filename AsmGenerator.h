@@ -3,6 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <list>
+#include <deque>
 #include <map>
 #include <utility>
 #include "AstNode.h"
@@ -23,7 +24,14 @@ class AsmGenerator {
 		int varStackIndex;
 		int currStack;
 		std::list<int> increments;
+		std::deque<int> branchStack;
 		int scopeCount;
+		int branchCount;
 		std::string code;
+
+		int pushBranch();
+		int popBranch();
+		void pushScope();
+		void popScope();
 };
 

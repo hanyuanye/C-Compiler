@@ -23,11 +23,13 @@ void AsmGenerator::error(std::string msg) {
 }
 
 std::string AsmGenerator::getOffset(std::string identifier) {
-	auto offset = variableMap[scopeCount].find(identifier);
-	if (offset == variableMap[scopeCount].end()) {
-		error("unknown identifier");
+	for (auto i = variableMap.begin(); i != variableMap.end(); i++) {
+		if ((*i).find(identifier) != (*i).end()) {
+			return std::to_string((*(*i).find(identifier)).second);
+		}
 	}
-	return std::to_string((*offset).second);
+	error("unknown identifier");
+	return "";
 }
 
 void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
@@ -79,12 +81,14 @@ void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 	}
 
 	if (ast->type == "ifBlock") {
+		pushScope();		
 		emitln("cmpl	$0, %eax");
-		emitln("je	_branch");
+		emitln("je	_branch" + std::to_string(pushBranch()));
 	}
 
 	if (ast->type == "elseBody") {
-		emitln("_branch:");
+		popScope();
+		emitln(std::string("_branch") + std::to_string(popBranch()) + ":");
 	}
 
 	if (ast->type == "boolOp") {
@@ -250,3 +254,26 @@ void AsmGenerator::pop(std::string value) {
 	currStack += increments.back();	
 	increments.pop_back();
 }
+
+int AsmGenerator::pushBranch() {
+	branchCount++;
+	branchStack.push_back(branchCount);
+	return branchCount;
+}
+
+int AsmGenerator::popBranch() {
+	int branch = branchStack.back();
+	branchStack.pop_back();
+	return branch;
+}
+
+void AsmGenerator::pushScope() {
+	scopeCount++;
+	variableMap.push_back(std::unordered_map<std::string, int>());
+}
+
+void AsmGenerator::popScope() {
+	scopeCount--;
+	variableMap.pop_back();
+}
+

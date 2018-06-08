@@ -1,6 +1,6 @@
 #include "Parser.h"
 
-const std::string statementArr[] = {"return", "if"};
+const std::string statementArr[] = {"return", "if", "while"};
 const std::unordered_set<std::string> Parser::statementDict(statementArr, statementArr + sizeof(statementArr)/sizeof(statementArr[0]));
 const std::string addOpArr[] = {"+","-"};
 const std::unordered_set<std::string> Parser::addOpDict(addOpArr, addOpArr + sizeof(addOpArr)/sizeof(addOpArr[0]));
@@ -101,6 +101,9 @@ AstNode Parser::parseBody() {
 			else if (match("if", peekNext())) {
 				line = parseIfStatement();
 			}
+			else if (match("while", peekNext())) {
+				line = parseWhileStatement();
+			}
 		}
 		else if (contains(typeDict, peekNext())) {
 			declarations++;
@@ -115,6 +118,13 @@ AstNode Parser::parseBody() {
 	body.addNode(numDecls);
 	body.scopeFlag = returnInScope;
 	return body;
+}
+
+AstNode Parser::parseWhileStatement() {
+	AstNode whileBlock("whileBlock");
+	AstNode ifBlock = parseIfStatement();
+	whileBlock.addNode(ifBlock);
+	return whileBlock;
 }
 
 AstNode Parser::parseIfStatement() {

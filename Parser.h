@@ -26,6 +26,7 @@ class Parser {
 		AstNode parseDecl();
 		AstNode parseAssign(std::string value);
 		AstNode parseIfStatement();
+		AstNode parseWhileStatement();
 		AstNode parseReturnStatement();
 		AstNode parseExpression();
 		AstNode parseAnd();

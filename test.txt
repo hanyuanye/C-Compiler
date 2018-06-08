@@ -1,6 +1,8 @@
 int main() {
-	int a = 5;
-	int b = 1;
-	int d = a * b * 2 * a;
-	return d;
+	int b = 6;
+	if (0) {
+		int a = 5;
+		return 10;
+	}
+	return b;
 }
