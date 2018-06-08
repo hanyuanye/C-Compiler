@@ -4,7 +4,7 @@ const std::string statementArr[] = {"return", "if", "while"};
 const std::unordered_set<std::string> Parser::statementDict(statementArr, statementArr + sizeof(statementArr)/sizeof(statementArr[0]));
 const std::string addOpArr[] = {"+","-"};
 const std::unordered_set<std::string> Parser::addOpDict(addOpArr, addOpArr + sizeof(addOpArr)/sizeof(addOpArr[0]));
-const std::string mulOpArr[] = {"*","/"};
+const std::string mulOpArr[] = {"*","/", "%"};
 const std::unordered_set<std::string> Parser::mulOpDict(mulOpArr, mulOpArr + sizeof(mulOpArr)/sizeof(mulOpArr[0]));
 const std::string unaryArr[] = {"-","~","!"};
 const std::unordered_set<std::string> Parser::unaryDict(unaryArr, unaryArr + sizeof(unaryArr)/sizeof(unaryArr[0]));
