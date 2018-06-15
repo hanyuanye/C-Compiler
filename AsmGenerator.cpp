@@ -3,6 +3,7 @@
 AsmGenerator::AsmGenerator() {
 	scopeCount = 0;
 	variableMap.push_back(std::unordered_map<std::string, int>());
+	currStack = 0;
 }
 
 void AsmGenerator::emitln(std::string s) {
@@ -67,7 +68,7 @@ void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 	}
 
 	if (ast->type == "numDecls") {
-		currStack = -4 *std::stoi(ast->value);
+		currStack += -4 *std::stoi(ast->value);
 	}
 
 	if (ast->type == "decl" ) {
@@ -218,6 +219,18 @@ void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 			emitln("pop	%ecx");
 			emitln("xor	%edx, %edx");
 			emitln("idivl	%ecx");
+		}
+
+		if (ast->value == "%") {
+			push("%eax", 4);
+			generateAsmChildren(ast);
+			pop("%ecx");
+			emitln("push	%eax");
+			emitln("movl	%ecx, %eax");
+			emitln("pop	%ecx");
+			emitln("xor	%edx, %edx");
+			emitln("idivl	%ecx");
+			emitln("movl	%edx, %eax");
 		}
 
 		return;

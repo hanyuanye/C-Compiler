@@ -23,7 +23,7 @@ int main(int argc, char** argv)
 //		std::cout << t.first << " " << t.second.type << " " << t.second.value << std::endl;
 //	}
 	parser.parse();
-//	parser.print();
+	parser.print();
 	AsmGenerator asmGen;
 	asmGen.generateAssembly(parser.ast);
 	asmGen.emit();
