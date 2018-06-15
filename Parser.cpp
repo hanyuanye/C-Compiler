@@ -218,6 +218,7 @@ AstNode Parser::parseReturnStatement() {
 AstNode Parser::parseExpression() {
 	AstNode expr("expression");
 	AstNode boolTerm = parseAnd();
+	if (!match("||", peekNext())) return boolTerm;
 	while (match("||", peekNext())) {
 		AstNode op("boolOp", getNext().type);
 		AstNode nextTerm = parseAnd();
@@ -231,6 +232,7 @@ AstNode Parser::parseExpression() {
 AstNode Parser::parseAnd() {
 	AstNode boolTerm("boolTerm");
 	AstNode equalityTerm = parseEquality();
+	if (!match("&&", peekNext())) return equalityTerm;
 	while (match("&&", peekNext())) {
 		AstNode op("boolOp", getNext().type);
 		AstNode nextTerm;
@@ -251,6 +253,7 @@ AstNode Parser::parseAnd() {
 AstNode Parser::parseEquality() {
 	AstNode equalityTerm("equalityTerm");
 	AstNode relTerm = parseRelational();
+	if (!contains(equalityOpDict, peekNext())) return relTerm;
 	while (contains(equalityOpDict, peekNext())) {
 		AstNode op("equalityOp", getNext().type);
 		AstNode nextTerm = parseRelational();
@@ -264,6 +267,7 @@ AstNode Parser::parseEquality() {
 AstNode Parser::parseRelational() {
 	AstNode relationalTerm("relationalTerm");
 	AstNode arith = parseArithmetic();
+	if (!contains(relOpDict, peekNext())) return arith;
 	while (contains(relOpDict, peekNext())) {
 		AstNode op("relOp", getNext().type); 
 		AstNode nextArith = parseArithmetic();
@@ -277,6 +281,7 @@ AstNode Parser::parseRelational() {
 AstNode Parser::parseArithmetic() {
 	AstNode expr("arithmetic");
 	AstNode term = parseTerm();
+	if (!contains(addOpDict, peekNext())) return term;
 	while (contains(addOpDict, peekNext())) {
 		AstNode op("addOp", getNext().type);
 		AstNode nextTerm = parseTerm();
@@ -290,6 +295,7 @@ AstNode Parser::parseArithmetic() {
 AstNode Parser::parseTerm() {
 	AstNode term("term");
 	AstNode factor = parseFactor();
+	if (!contains(mulOpDict, peekNext())) return factor;
 	while (contains(mulOpDict, peekNext())) {
 		AstNode op("mulOp", getNext().type);
 		AstNode nextFactor = parseFactor();
@@ -326,7 +332,7 @@ AstNode Parser::UnOp(std::string type, AstNode expr) {
 }
 
 void Parser::print() {
-	printHelper(ast);	
+	printHelper(ast);
 }
 
 void Parser::printHelper(std::shared_ptr<AstNode> &node) {
