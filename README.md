@@ -24,4 +24,4 @@ These instructions will get you a copy of the project up and running on your mac
 3. Type "make" to generate the assembly file called "assembly.s"
 4. Type "make asm" to compile and run the assembly file.
 
-To change the source code being compiled, enter compiler.cpp and edit the string "code".
+To change the source code being compiled, open test.txt and edit the code there.
