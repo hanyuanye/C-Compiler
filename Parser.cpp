@@ -123,7 +123,7 @@ AstNode Parser::parseBody() {
 
 AstNode Parser::parseWhileStatement() {
 	AstNode whileBlock("whileBlock");
-	AstNode ifBlock("ifBody");
+	AstNode ifBlock("ifBlock");
 	AstNode ifStatement("ifOp");
 	Token t = getNext();
 	abortMatch("(");
@@ -131,8 +131,9 @@ AstNode Parser::parseWhileStatement() {
 	abortMatch(")");
 	abortMatch("{");
 	AstNode ifBody = parseBody();
+	ifBody.type = "whileBody";
 	abortMatch("}");
-	ifBlock.addNode(AstNode("elseBody"));
+	ifBlock.addNode(AstNode("whileElseBody"));
 	ifBlock.addNode(AstNode("loop"));
 	ifBlock.addNode(ifBody);
 	ifStatement.addNode(ifBlock);
@@ -144,7 +145,7 @@ AstNode Parser::parseWhileStatement() {
 }
 
 AstNode Parser::parseIfStatement() {
-	AstNode ifBlock("ifBody");
+	AstNode ifBlock("ifBlock");
 	AstNode ifStatement("ifOp");
 	Token t = getNext();
 	abortMatch("(");
@@ -152,6 +153,7 @@ AstNode Parser::parseIfStatement() {
 	abortMatch(")");
 	abortMatch("{");
 	AstNode ifBody = parseBody();
+	ifBody.type = "ifBody";
 	abortMatch("}");
 	if (match("else", peekNext())) {
 		Token t = getNext();

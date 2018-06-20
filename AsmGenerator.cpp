@@ -85,19 +85,41 @@ void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 		emitln(std::string("_branch") + pushBranch() + ":");
 	}
 
+	if (ast->type == "whileBody") {
+		pushScope();
+		generateAsmChildren(ast);
+		popScope();
+		return;
+	}
+
+	if (ast->type == "whileElseBody") {
+		emitln(std::string("_branch") + popBranch() + ":");
+	}
+
 	if (ast->type == "loop") {
 		emitln("jmp	_branch" + popSecondBranch());
 	}
 
-	if (ast->type == "ifBody") {
-		pushScope();
+	if (ast->type == "ifBlock") {
 		emitln("cmpl	$0, %eax");
 		emitln("je	_branch" + pushBranch());
 	}
 
+	if (ast->type == "ifBody") {
+		pushScope();
+		generateAsmChildren(ast);
+		popScope();
+		emitln("jmp	_branch" + pushBranch());
+		return;
+	}
+
 	if (ast->type == "elseBody") {
+		pushScope();
+		emitln(std::string("_branch") + popSecondBranch() + ":");
+		generateAsmChildren(ast);
 		popScope();
 		emitln(std::string("_branch") + popBranch() + ":");
+		return;
 	}
 
 	if (ast->type == "boolOp") {
