@@ -1,9 +1,11 @@
 int main() {
 	int a = 0;
-	int counter = 1;
-	while (a < 10) {
-		counter = counter + 2;
+	int counter = 0;
+	while (a < 100) {
 		a = a + 1;
+		if (a % 7 == 0) {
+			counter = counter + 1;
+		}
 	}
 	return counter;
 }

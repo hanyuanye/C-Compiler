@@ -1,6 +1,12 @@
 # C Compiler
 C Compiler compiles a subset of C into x86 assembly. It currently supports local
-variables, multi statement functions and mathematical/boolean expressions.  
+variables, multi statement functions and mathematical/boolean expressions.
+
+It also has control flow statements like if/else blocks and while loops. Therfore 
+the subset of supported keywords is turing complete.
+
+An example program returning the number of integers less than 100 divisible by 
+7 is provided in test.txt.  
 
 ## Instructions
 
