@@ -236,9 +236,9 @@ void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 			push("%eax", 4);
 			generateAsmChildren(ast);
 			pop("%ecx");
-			emitln("push	%eax");
+			push("%eax", 4);
 			emitln("movl	%ecx, %eax");
-			emitln("pop	%ecx");
+			pop("%ecx");
 			emitln("xor	%edx, %edx");
 			emitln("idivl	%ecx");
 		}
@@ -247,9 +247,9 @@ void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 			push("%eax", 4);
 			generateAsmChildren(ast);
 			pop("%ecx");
-			emitln("push	%eax");
+			push("%eax", 4);
 			emitln("movl	%ecx, %eax");
-			emitln("pop	%ecx");
+			pop("%ecx");
 			emitln("xor	%edx, %edx");
 			emitln("idivl	%ecx");
 			emitln("movl	%edx, %eax");
