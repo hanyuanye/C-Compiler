@@ -2,6 +2,7 @@
 #include <fstream>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <list>
 #include <deque>
 #include <map>
@@ -17,22 +18,27 @@ class AsmGenerator {
 		void generateAsmChildren(std::shared_ptr<AstNode> ast);
 		void emitln(std::string s);
 		void error(std::string msg);
-		void push(std::string value, int increment);
-		void pop(std::string value);
 		std::string getOffset(std::string identifier);
 		std::vector< std::unordered_map<std::string, int> > variableMap;
-		int varStackIndex;
-		int currStack;
+		std::unordered_set<std::string> functionMap;
+		bool addFunction(std::shared_ptr<AstNode> ast);
+
 		std::list<int> increments;
 		std::deque<int> branchStack;
-		int scopeCount;
-		int branchCount;
 		std::string code;
+
+		void push(std::string value, int increment);
+		void pop(std::string value);
+		int varStackIndex;
+		int currStack;
 
 		std::string pushBranch();
 		std::string popBranch();
 		std::string popSecondBranch();
+		int branchCount;
+
 		void pushScope();
 		void popScope();
+		int scopeCount;
 };
 

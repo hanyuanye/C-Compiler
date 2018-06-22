@@ -2,7 +2,6 @@
 
 AsmGenerator::AsmGenerator() {
 	scopeCount = 0;
-	variableMap.push_back(std::unordered_map<std::string, int>());
 	currStack = 0;
 }
 
@@ -26,7 +25,7 @@ void AsmGenerator::error(std::string msg) {
 std::string AsmGenerator::getOffset(std::string identifier) {
 	for (auto i = variableMap.begin(); i != variableMap.end(); i++) {
 		if ((*i).find(identifier) != (*i).end()) {
-			return std::to_string((*(*i).find(identifier)).second);
+			return std::to_string((*(*i).find(identifier)).second - 4);
 		}
 	}
 	error("unknown identifier");
@@ -38,11 +37,22 @@ void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 
 	if (ast->type == "function") {
 		varStackIndex = 0;
+		variableMap.push_back(std::unordered_map<std::string, int>());
+		if (!addFunction(ast)) {
+			error("redefinition of function");
+		}
 		emitln(std::string(".globl ") + ast->value);
 		emitln(std::string(ast->value + ":"));
 		emitln("push	%ebp");
 		emitln("movl	%esp, %ebp");
-		varStackIndex = 0;
+	}
+
+	if (ast->type == "FuncTerm") {
+		if (functionMap.find(ast->value) == functionMap.end()) {
+			error("unidentified function call");
+		}
+		//TODO: implement parameter passing
+		emitln(std::string("call	" + ast->value));
 	}
 
 	if (ast->type == "const") {
@@ -51,8 +61,9 @@ void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 
 	if (ast->type == "statement") {
 		if (ast->value == "return") {
-			emitln("movl	%ebp, %esp");
-			emitln("pop	%ebp");
+//			emitln("movl	%ebp, %esp");
+//			emitln("pop	%ebp");
+			emitln("leave");
 			emitln("ret");
 		}
 	}
@@ -68,6 +79,8 @@ void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 	}
 
 	if (ast->type == "numDecls") {
+		int bytes = 4 * std::stoi(ast->value);
+		emitln(std::string("sub   $") + std::to_string(bytes) + ", %esp");
 		currStack += -4 *std::stoi(ast->value);
 	}
 
@@ -124,17 +137,17 @@ void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 
 	if (ast->type == "boolOp") {
 		if (ast->value == "||") {
-			push("%eax", 4);
+			emitln("push    %eax");
 			generateAsmChildren(ast);
-			pop("%ecx");
+			emitln("pop    %ecx");
 			emitln("orl	%ecx, %eax");
 			emitln("movl	$0, %eax");
 			emitln("setne	%al");
 		}
 		if (ast->value == "&&") {
-			push("%eax", 4);
+			emitln("push    %eax");
 			generateAsmChildren(ast);
-			pop("%ecx");
+			emitln("pop    %ecx");
 			emitln("cmpl	$0, %ecx");
 			emitln("setne	%cl");
 			emitln("cmpl	$0, %eax");
@@ -147,18 +160,18 @@ void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 
 	if (ast->type == "equalityOp") {
 		if (ast->value == "==") {
-			push("%eax", 4);
+			emitln("push    %eax");
 			generateAsmChildren(ast);
-			pop("%ecx");
+			emitln("pop    %ecx");
 			emitln("cmpl	%ecx, %eax");
 			emitln("movl	$0, %eax");
 			emitln("sete	%al");
 		}
 
 		if (ast->value == "!=") {
-			push("%eax", 4);
+			emitln("push    %eax");
 			generateAsmChildren(ast);
-			pop("%ecx");
+			emitln("pop    %ecx");
 			emitln("cmpl	%ecx, %eax");
 			emitln("movl	$0, %eax");
 			emitln("setne	%al");
@@ -169,34 +182,34 @@ void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 
 	if (ast->type == "relOp") {
 		if (ast->value == ">") {
-			push("%eax", 4);
+			emitln("push    %eax");
 			generateAsmChildren(ast);
-			pop("%ecx");
+			emitln("pop    %ecx");
 			emitln("cmpl	%ecx, %eax");
 			emitln("movl	$0, %eax");
 			emitln("setl	%al");
 		}
 
 		if (ast->value == "<") {
-			push("%eax", 4);
+			emitln("push    %eax");
 			generateAsmChildren(ast);
-			pop("%ecx");
+			emitln("pop    %ecx");
 			emitln("cmpl	%ecx, %eax");
 			emitln("movl	$0, %eax");
 			emitln("setg	%al");
 		}
 		if (ast->value == "<=") {
-			push("%eax", 4);
+			emitln("push    %eax");
 			generateAsmChildren(ast);
-			pop("%ecx");
+			emitln("pop    %ecx");
 			emitln("cmpl	%ecx, %eax");
 			emitln("movl	$0, %eax");
 			emitln("setge	%al");
 		}
 		if (ast->value == ">=") {
-			push("%eax", 4);
+			emitln("push    %eax");
 			generateAsmChildren(ast);
-			pop("%ecx");
+			emitln("pop    %ecx");
 			emitln("cmpl	%ecx, %eax");
 			emitln("movl	$0, %eax");
 			emitln("setle	%al");
@@ -207,16 +220,16 @@ void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 
 	if (ast->type == "addOp") {
 		if (ast->value == "+") {
-			push("%eax", 4);
+			emitln("push    %eax");
 			generateAsmChildren(ast);
-			pop("%ecx");
+			emitln("pop    %ecx");
 			emitln("addl	%ecx, %eax");
 		}
 
 		if (ast->value == "-") {
-			push("%eax", 4);
+			emitln("push    %eax");
 			generateAsmChildren(ast);
-			pop("%ecx");
+			emitln("pop    %ecx");
 			emitln("subl	%eax, %ecx");
 			emitln("movl	%ecx, %eax");
 		}
@@ -226,30 +239,30 @@ void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 	
 	if (ast->type == "mulOp") {
 		if (ast->value == "*") {
-			push("%eax", 4);
+			emitln("push    %eax");
 			generateAsmChildren(ast);
-			pop("%ecx");
+			emitln("pop    %ecx");
 			emitln("imul	%ecx, %eax");
 		}
 
 		if (ast->value == "/") {
-			push("%eax", 4);
+			emitln("push    %eax");
 			generateAsmChildren(ast);
-			pop("%ecx");
-			push("%eax", 4);
+			emitln("pop    %ecx");
+			emitln("push    %eax");
 			emitln("movl	%ecx, %eax");
-			pop("%ecx");
+			emitln("pop    %ecx");
 			emitln("xor	%edx, %edx");
 			emitln("idivl	%ecx");
 		}
 
 		if (ast->value == "%") {
-			push("%eax", 4);
+			emitln("push    %eax");
 			generateAsmChildren(ast);
-			pop("%ecx");
-			push("%eax", 4);
+			emitln("pop    %ecx");
+			emitln("push    %eax");
 			emitln("movl	%ecx, %eax");
-			pop("%ecx");
+			emitln("pop    %ecx");
 			emitln("xor	%edx, %edx");
 			emitln("idivl	%ecx");
 			emitln("movl	%edx, %eax");
@@ -281,6 +294,14 @@ void AsmGenerator::generateAsmChildren(std::shared_ptr<AstNode> ast) {
 	for (auto i = ast->children.rbegin(); i != ast->children.rend(); i++) {
 		generateAssembly(*i);
 	}
+}
+
+bool AsmGenerator::addFunction(std::shared_ptr<AstNode> node) {
+	if (functionMap.find(node->value) != functionMap.end()) {
+		return false;
+	}
+	functionMap.insert(node->value);
+	return true;
 }
 
 void AsmGenerator::push(std::string value, int increment) {
@@ -325,4 +346,3 @@ void AsmGenerator::popScope() {
 	scopeCount--;
 	variableMap.pop_back();
 }
-

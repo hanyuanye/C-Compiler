@@ -5,6 +5,7 @@
 #include <vector>
 #include <deque>
 #include <memory>
+
 class AstNode {
 	public:
 		AstNode();

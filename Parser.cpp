@@ -29,6 +29,10 @@ Token Parser::getNext() {
 	return t;
 }
 
+bool Parser::isEmpty() {
+	return look == tokenList.end();
+}
+
 std::string Parser::peekNext() {
 	return (*look).second.type;
 }
@@ -59,8 +63,11 @@ void Parser::abort(std::string s) {
 }
 
 void Parser::parse() {
-	AstNode function = parseFunction();
-	AstNode program("program", function);
+	AstNode program("program");
+	while (!isEmpty()) {
+		AstNode function = parseFunction();
+		program.addNodeFront(function);
+	}
 	ast = std::make_shared<AstNode>(program);
 }
 
@@ -138,8 +145,6 @@ AstNode Parser::parseWhileStatement() {
 	ifBlock.addNode(ifBody);
 	ifStatement.addNode(ifBlock);
 	ifStatement.addNode(condition);
-//	whileBlock.addNode(AstNode("loop"));
-//	AstNode ifStatement = parseIfStatement();
 	whileBlock.addNode(ifStatement);
 	return whileBlock;
 }
@@ -319,6 +324,9 @@ AstNode Parser::parseFactor() {
 		return AstNode("const",t.value);
 	}
 	else if (match("identifier", t.type)) {
+		if (match("(", peekNext())) {
+			return parseFuncTerm(t.value);
+		}
 		return AstNode("identAccess", t.value);
 	}
 	else if (contains(unaryDict, t.type)) {
@@ -326,6 +334,20 @@ AstNode Parser::parseFactor() {
 		return UnOp(t.type, expr);
 	}
 	abort("expression");
+}
+
+AstNode Parser::parseFuncTerm(std::string functionName) {
+	abortMatch("(");
+	AstNode funcTerm("FuncTerm");
+	funcTerm.addValue(functionName);
+	while (match("identifier", peekNext())) {
+		funcTerm.addNodeFront(parseExpression());
+		if (!match(",", peekNext())) {
+			break;
+		}
+	}
+	abortMatch(")");
+	return funcTerm;
 }
 
 AstNode Parser::UnOp(std::string type, AstNode expr) {

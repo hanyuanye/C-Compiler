@@ -12,6 +12,7 @@
 class Parser {
 	private:
 		Token getNext();
+		bool isEmpty();
 		std::string peekNext();
 		std::map<int, Token> tokenList;
 		void expect(std::string msg);
@@ -35,6 +36,7 @@ class Parser {
 		AstNode parseArithmetic();
 		AstNode parseTerm();
 		AstNode parseFactor();
+		AstNode parseFuncTerm(std::string functionName);
 		AstNode UnOp(std::string type, AstNode expr);
 
 		void printHelper(std::shared_ptr<AstNode> &node);
