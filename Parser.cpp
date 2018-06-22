@@ -338,10 +338,12 @@ AstNode Parser::parseFactor() {
 
 AstNode Parser::parseFuncTerm(std::string functionName) {
 	abortMatch("(");
-	AstNode funcTerm("FuncTerm");
+	AstNode funcTerm("funcTerm");
 	funcTerm.addValue(functionName);
 	while (match("identifier", peekNext())) {
-		funcTerm.addNodeFront(parseExpression());
+		AstNode param = parseExpression();
+		param.type = "parameter";
+		funcTerm.addNodeFront(param);
 		if (!match(",", peekNext())) {
 			break;
 		}

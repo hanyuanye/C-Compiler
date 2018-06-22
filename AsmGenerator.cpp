@@ -25,7 +25,7 @@ void AsmGenerator::error(std::string msg) {
 std::string AsmGenerator::getOffset(std::string identifier) {
 	for (auto i = variableMap.begin(); i != variableMap.end(); i++) {
 		if ((*i).find(identifier) != (*i).end()) {
-			return std::to_string((*(*i).find(identifier)).second - 4);
+			return std::to_string(-4 + (*(*i).find(identifier)).second);
 		}
 	}
 	error("unknown identifier");
@@ -37,6 +37,7 @@ void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 
 	if (ast->type == "function") {
 		varStackIndex = 0;
+		branchCount = 0;
 		variableMap.push_back(std::unordered_map<std::string, int>());
 		if (!addFunction(ast)) {
 			error("redefinition of function");
@@ -47,7 +48,7 @@ void AsmGenerator::generateAssembly(std::shared_ptr<AstNode> ast) {
 		emitln("movl	%esp, %ebp");
 	}
 
-	if (ast->type == "FuncTerm") {
+	if (ast->type == "funcTerm") {
 		if (functionMap.find(ast->value) == functionMap.end()) {
 			error("unidentified function call");
 		}
