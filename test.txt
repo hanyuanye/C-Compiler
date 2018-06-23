@@ -1,14 +1,7 @@
-int func() {
-	int a = 5;
-	int counter = 0;
-	while (a < 10) {
-		counter = counter + 7;
-		a = a + 1;
-	}
-	return counter;
+int func(int a) {
+	return a;
 }
 
 int main() {
-	int l = 10;
-	return 2 * func() + l;
+	return 2*func(3);
 }

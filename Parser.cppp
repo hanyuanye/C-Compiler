@@ -40,7 +40,7 @@ std::string Parser::peekNext() {
 void Parser::abortMatch(std::string match) {
 	Token t = getNext();
 	if (t.type != match) {
-		std::cout << t.type << std::endl;
+		std::cout << t.value << " " << t.type << std::endl;
 		abort(match);
 	}
 }
@@ -63,29 +63,29 @@ void Parser::abort(std::string s) {
 }
 
 void Parser::parse() {
-	AstNode program("program");
+	AstNode programNode("program");
 	while (!isEmpty()) {
-		AstNode function = parseFunction();
-		program.addNodeFront(function);
+		AstNode functionNode = parseFunction();
+		programNode.addNodeFront(functionNode);
 	}
-	ast = std::make_shared<AstNode>(program);
+	ast = std::make_shared<AstNode>(programNode);
 }
 
 AstNode Parser::parseFunction() {
-	AstNode function("function");
+	AstNode functionNode("function");
 	abortMatch("int");
 	Token t = getNext();
 	if (t.type != "identifier") {
 		abort("identifier");
 	}
-	function.addValue(t.value);
+	functionNode.addValue(t.value);
 	abortMatch("(");
 	int numberOfParameters = 0;
 	while(contains(typeDict, peekNext())) {
 		getNext();
 		Token ident = getNext();
-		AstNode param("parameterFunctionPrototype", ident.value);
-		function.addNode(param);
+		AstNode param(parameterFunctionPrototype, ident.value);
+		functionNode.addNode(param);
 		if (!match(",", peekNext())) {
 			break;
 		}
@@ -97,19 +97,21 @@ AstNode Parser::parseFunction() {
 	abortMatch("{");
 	AstNode body = parseBody();
 	if (!body.scopeFlag) {
-		AstNode statementBlock("statementBlock");
-		AstNode ret("statement", "return");
+		AstNode statementBlock(irrelevant);
+		AstNode ret(returnStatement, "return");
 		statementBlock.addNode(ret);
-		statementBlock.addNode(AstNode("const", "0"));
+		statementBlock.addNode(AstNode(constant, "0"));
 		body.addNodeFront(statementBlock);
+	} else {
+		functionNode.addNodeFront(body);
 	}
 	abortMatch("}");
-	function.addNodeFront(body);
+//	function.addNode("numberParameters", std::to_string(numberOfParameters));
 	return function;
 }
 
 AstNode Parser::parseBody() {
-	AstNode body("body");
+	AstNode body(irrelevant);
 	AstNode line;
 	bool returnInScope = false;
 	int declarations = 0;
@@ -135,26 +137,26 @@ AstNode Parser::parseBody() {
 		}
 		body.addNodeFront(line);
 	}
-	AstNode numDecls("numDecls", std::to_string(declarations));
+	AstNode numDecls(numberDeclarations, std::to_string(declarations));
 	body.addNode(numDecls);
 	body.scopeFlag = returnInScope;
 	return body;
 }
 
 AstNode Parser::parseWhileStatement() {
-	AstNode whileBlock("whileBlock");
-	AstNode ifBlock("ifBlock");
-	AstNode ifStatement("ifOp");
+	AstNode whileBlock(whileBlock);
+	AstNode ifBlock(ifBlock);
+	AstNode ifStatement(irrelevant);
 	Token t = getNext();
 	abortMatch("(");
 	AstNode condition = parseExpression();
 	abortMatch(")");
 	abortMatch("{");
 	AstNode ifBody = parseBody();
-	ifBody.type = "whileBody";
+	ifBody.addType(whileBody);
 	abortMatch("}");
-	ifBlock.addNode(AstNode("whileElseBody"));
-	ifBlock.addNode(AstNode("loop"));
+	ifBlock.addNode(AstNode(whileElseBody));
+	ifBlock.addNode(AstNode(whileLoop));
 	ifBlock.addNode(ifBody);
 	ifStatement.addNode(ifBlock);
 	ifStatement.addNode(condition);
@@ -163,42 +165,42 @@ AstNode Parser::parseWhileStatement() {
 }
 
 AstNode Parser::parseIfStatement() {
-	AstNode ifBlock("ifBlock");
-	AstNode ifStatement("ifOp");
+	AstNode ifBlockNode(ifBlock);
+	AstNode ifStatement(irrelevant);
 	Token t = getNext();
 	abortMatch("(");
 	AstNode condition = parseExpression();
 	abortMatch(")");
 	abortMatch("{");
-	AstNode ifBody = parseBody();
-	ifBody.type = "ifBody";
+	AstNode ifBodyNode = parseBody();
+	ifBodyNode.addType(ifBody);
 	abortMatch("}");
 	if (match("else", peekNext())) {
 		Token t = getNext();
 		abortMatch("{");
-		AstNode elseBody = parseBody();
-		elseBody.type = "elseBody";
-		ifBlock.addNode(elseBody);
+		AstNode elseBodyNode = parseBody();
+		elseBodyNode.addType(elseBody);
+		ifBlockNode.addNode(elseBodyNode);
 		abortMatch("}");
 	}
 	else {
-		AstNode elseBody("elseBody");
-		ifBlock.addNode(elseBody);
+		AstNode elseBodyNode(elseBody);
+		ifBlockNode.addNode(elseBodyNode);
 	}
-	ifBlock.addNode(ifBody);
+	ifBlockNode.addNode(ifBodyNode);
 	ifStatement.addNode(ifBlock);
 	ifStatement.addNode(condition);
 	return ifStatement;
 }
 
 AstNode Parser::parseDecl() {
-	AstNode decl("declaration");
+	AstNode decl(irrelevant);
 	Token t = getNext();
 	t = getNext();
 	if (!match("identifier", t.type)) {
 		abort("identifier");
 	}
-	AstNode variable("decl", t.value);
+	AstNode variable(declaration, t.value);
 	if (match("=", peekNext())) {
 		AstNode assign = parseAssign(t.value);
 		decl.addNode(assign);
@@ -211,9 +213,9 @@ AstNode Parser::parseDecl() {
 }
 
 AstNode Parser::parseAssign(std::string value) {
-	AstNode assign("assignOp", "=");
+	AstNode assign(irrelevant);
 	Token t = getNext(); //incrementing by one token to pass assingment operator
-	AstNode assignVar("identAssign", value);
+	AstNode assignVar(identifierAssign, value);
 	AstNode expr = parseExpression(); //getting expression to parse with
 	assign.addNode(assignVar);
 	assign.addNode(expr);//since in post order, want to identify expression first when generating assembly
@@ -222,13 +224,13 @@ AstNode Parser::parseAssign(std::string value) {
 }
 
 AstNode Parser::parseReturnStatement() {
-	AstNode statementBlock("statementBlock");
+	AstNode statementBlock(irrelevant);
 	Token t = getNext();
 	if (!contains(statementDict, t.type)) {
 		abort("statement");
 	}
 	AstNode exp = parseExpression();
-	AstNode statement("statement", t.type);
+	AstNode statement(returnStatement, t.type);
 	statementBlock.addNode(statement);
 	statementBlock.addNode(exp);
 	abortMatch(";");
@@ -236,11 +238,11 @@ AstNode Parser::parseReturnStatement() {
 }
 
 AstNode Parser::parseExpression() {
-	AstNode expr("expression");
+	AstNode expr(irrelevant);
 	AstNode boolTerm = parseAnd();
 	if (!match("||", peekNext())) return boolTerm;
 	while (match("||", peekNext())) {
-		AstNode op("boolOp", getNext().type);
+		AstNode op(boolOp, getNext().type);
 		AstNode nextTerm = parseAnd();
 		op.addNode(nextTerm);
 		expr.addNode(op);
@@ -250,11 +252,11 @@ AstNode Parser::parseExpression() {
 }
 
 AstNode Parser::parseAnd() {
-	AstNode boolTerm("boolTerm");
+	AstNode boolTerm(irrelevant);
 	AstNode equalityTerm = parseEquality();
 	if (!match("&&", peekNext())) return equalityTerm;
 	while (match("&&", peekNext())) {
-		AstNode op("boolOp", getNext().type);
+		AstNode op(boolOp, getNext().type);
 		AstNode nextTerm;
 		if (match("(", peekNext())) {
 			nextTerm = parseExpression();
@@ -271,11 +273,11 @@ AstNode Parser::parseAnd() {
 }
 
 AstNode Parser::parseEquality() {
-	AstNode equalityTerm("equalityTerm");
+	AstNode equalityTerm(irrelevant);
 	AstNode relTerm = parseRelational();
 	if (!contains(equalityOpDict, peekNext())) return relTerm;
 	while (contains(equalityOpDict, peekNext())) {
-		AstNode op("equalityOp", getNext().type);
+		AstNode op(equalityOp, getNext().type);
 		AstNode nextTerm = parseRelational();
 		op.addNode(nextTerm);
 		equalityTerm.addNode(op);
@@ -285,11 +287,11 @@ AstNode Parser::parseEquality() {
 }
 
 AstNode Parser::parseRelational() {
-	AstNode relationalTerm("relationalTerm");
+	AstNode relationalTerm(irrelevant);
 	AstNode arith = parseArithmetic();
 	if (!contains(relOpDict, peekNext())) return arith;
 	while (contains(relOpDict, peekNext())) {
-		AstNode op("relOp", getNext().type); 
+		AstNode op(relationOp, getNext().type); 
 		AstNode nextArith = parseArithmetic();
 		op.addNode(nextArith);
 		relationalTerm.addNode(op);
@@ -299,11 +301,11 @@ AstNode Parser::parseRelational() {
 }
 
 AstNode Parser::parseArithmetic() {
-	AstNode expr("arithmetic");
+	AstNode expr(irrelevant);
 	AstNode term = parseTerm();
 	if (!contains(addOpDict, peekNext())) return term;
 	while (contains(addOpDict, peekNext())) {
-		AstNode op("addOp", getNext().type);
+		AstNode op(addOp, getNext().type);
 		AstNode nextTerm = parseTerm();
 		op.addNode(nextTerm);
 		expr.addNode(op);
@@ -313,11 +315,11 @@ AstNode Parser::parseArithmetic() {
 }
 
 AstNode Parser::parseTerm() {
-	AstNode term("term");
+	AstNode term(irrelevant);
 	AstNode factor = parseFactor();
 	if (!contains(mulOpDict, peekNext())) return factor;
 	while (contains(mulOpDict, peekNext())) {
-		AstNode op("mulOp", getNext().type);
+		AstNode op(multiplyOp, getNext().type);
 		AstNode nextFactor = parseFactor();
 		op.addNode(nextFactor);
 		term.addNode(op);
@@ -334,13 +336,13 @@ AstNode Parser::parseFactor() {
 		return expr;
 	}
 	else if (match("number", t.type)) {
-		return AstNode("const",t.value);
+		return AstNode(constant,t.value);
 	}
 	else if (match("identifier", t.type)) {
 		if (match("(", peekNext())) {
 			return parseFuncTerm(t.value);
 		}
-		return AstNode("identAccess", t.value);
+		return AstNode(identifierAccess, t.value);
 	}
 	else if (contains(unaryDict, t.type)) {
 		AstNode expr = parseFactor();
@@ -351,10 +353,10 @@ AstNode Parser::parseFactor() {
 
 AstNode Parser::parseFuncTerm(std::string functionName) {
 	abortMatch("(");
-	AstNode funcTerm("funcTerm");
+	AstNode funcTerm(funcTerm);
 	funcTerm.addValue(functionName);
 	while (match("identifier", peekNext()) || match("number", peekNext())) {
-		AstNode param("parameter", parseExpression());
+		AstNode param(parameterFunctionCalling, parseExpression());
 		funcTerm.addNodeFront(param);
 		if (!match(",", peekNext())) {
 			break;
@@ -368,7 +370,7 @@ AstNode Parser::parseFuncTerm(std::string functionName) {
 }
 
 AstNode Parser::UnOp(std::string type, AstNode expr) {
-	expr.addNode(AstNode("unary", type));
+	expr.addNode(AstNode(unaryOp, type));
 	return expr;
 }
 
@@ -378,9 +380,8 @@ void Parser::print() {
 
 void Parser::printHelper(std::shared_ptr<AstNode> &node) {
 	if (!node) return;
-	std::cout << node->type << std::endl;
+	std::cout << node->value << std::endl;
 	for (auto &child : node->children) {
 		printHelper(child);
 	}
 }
-
