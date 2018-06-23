@@ -30,6 +30,7 @@ class AsmGenerator {
 		void push(std::string value, int increment);
 		void pop(std::string value);
 		int varStackIndex;
+		int paramIndex;
 		int currStack;
 
 		std::string pushBranch();

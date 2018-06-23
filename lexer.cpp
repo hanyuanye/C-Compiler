@@ -1,6 +1,7 @@
 #include "lexer.h"
 
 Lexer::Lexer() {
+	//TODO: Fix regex on identifier matching
 	typeRegex = std::regex("return|int|;|\\(|\\)|\\{|\\}|[_a-zA-Z][_a-zA-Z0-9]{0,30}*|-|~|!|\\+|\\/|\\*|\\%|&&|\\|\\||<[=>]?|==|>=?|\\&\\&|\\|\\||=|if|else|while|,");
 	numRegex = std::regex("[0-9]+");
 	std::vector<std::string> typeArr = {
